@@ -1,9 +1,10 @@
 ﻿import type { Metadata } from "next";
+import { SITE } from "@/content/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JXM · 个人主页",
-  description: "关于我与 AI Chater 的个人展示主页",
+  title: SITE.title,
+  description: SITE.description,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

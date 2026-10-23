@@ -74,5 +74,3 @@ export const HOME_STAR_POINTS: readonly HomeStarPoint[] = [
   { left: 71, top: 28, size: 1, opacity: 0.35, delay: 4.6, duration: 5.3, kind: "tiny", color: "blue" },
   { left: 91, top: 42, size: 1, opacity: 0.4, delay: 2.1, duration: 4.9, kind: "tiny", color: "cyan" },
 ];
-
-export const HOME_BRIGHT_STAR_COUNT = HOME_STAR_POINTS.filter((star) => star.kind === "bright").length;

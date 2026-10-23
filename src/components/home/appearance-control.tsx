@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Moon, Palette, Sun } from "lucide-react";
-import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, parseAppearance, type AppearancePreferences } from "@/client/appearance";
+import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, parseAppearance, type AppearancePreferences } from "@/lib/appearance";
 
 const COLORS = ["#6de7ff", "#7c9dff", "#ff8fa3", "#ffd166"];
 
