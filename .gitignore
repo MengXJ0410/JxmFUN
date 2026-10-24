@@ -19,6 +19,14 @@ out/
 .runtime/
 data/uploads/
 
+# Background sources: only webp is committed
+public/images/backgrounds/*.png
+public/images/backgrounds/*.jpg
+public/images/backgrounds/*.jpeg
+public/images/backgrounds/*.gif
+public/images/backgrounds/*.avif
+public/images/backgrounds/*.upload
+
 # Test and coverage output
 coverage/
 .nyc_output/

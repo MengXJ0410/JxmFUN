@@ -23,6 +23,7 @@ export const HOME_COPY = {
   heroSubtitle: "让每一次对话，都成为新的灵感入口。",
   heroCta: "了解这个项目",
   heroExplore: "向下探索",
+  returnToGate: "返回传送门",
   authorKicker: "ABOUT THE CREATOR",
   projectKicker: "LUGUAN LUGUAN",
   projectTitle: "棍木棍木棍木",

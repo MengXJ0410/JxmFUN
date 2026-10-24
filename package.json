@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "backgrounds": "node scripts/backgrounds.mjs",
+    "backgrounds:gui": "node scripts/backgrounds-gui.mjs",
+    "docker:up": "docker compose --env-file .env -f deploy/compose.yml up -d --build",
+    "docker:recreate": "docker compose --env-file .env -f deploy/compose.yml up -d --force-recreate",
+    "docker:ps": "docker compose --env-file .env -f deploy/compose.yml ps",
+    "docker:logs": "docker compose --env-file .env -f deploy/compose.yml logs -f mxjweb"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",

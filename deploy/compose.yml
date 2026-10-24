@@ -1,7 +1,10 @@
+name: jxmfun
+
 services:
   mxjweb:
     build:
-      context: .
+      context: ..
+      dockerfile: deploy/Dockerfile
       args:
         NODE_IMAGE: ${NODE_IMAGE:-node:22-alpine}
     image: mxjweb:latest
@@ -9,11 +12,15 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"
+    volumes:
+      - ../config:/app/config
+      - ../public/images/backgrounds:/app/public/images/backgrounds:ro
     environment:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
       TZ: Asia/Shanghai
+      SITE_ACCESS_KEY: ${SITE_ACCESS_KEY:-}
     logging:
       driver: json-file
       options:

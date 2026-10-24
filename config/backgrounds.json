@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "backgrounds": [
+    {
+      "file": "bg_001.webp",
+      "theme": "both",
+      "platform": "computer"
+    },
+    {
+      "file": "bg_002.webp",
+      "theme": "night",
+      "platform": "computer"
+    },
+    {
+      "file": "bg_003.webp",
+      "theme": "day",
+      "platform": "phone"
+    },
+    {
+      "file": "bg_004.webp",
+      "theme": "day",
+      "platform": "computer"
+    },
+    {
+      "file": "bg_005.webp",
+      "theme": "both",
+      "platform": "both"
+    },
+    {
+      "file": "bg_006.webp",
+      "theme": "both",
+      "platform": "both"
+    },
+    {
+      "file": "bg_999.webp",
+      "theme": "both",
+      "platform": "both"
+    }
+  ]
+}

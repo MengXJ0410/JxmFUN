@@ -5,15 +5,20 @@ import type { PointerEvent } from "react";
 import { HOME_BUBBLE_TERMS } from "@/content/home";
 import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, deriveBubbleColor, parseAppearance, type AppearanceChangeDetail } from "@/lib/appearance";
 import { advanceParticles, createBubbleVisuals, placeBubbleParticles, type BubbleParticle, type BubbleRect } from "@/lib/home/bubbles";
+import { type BackgroundEntry } from "@/lib/home/backgrounds";
+import { useBackgroundEnvironment } from "@/lib/home/use-background-environment";
+import { useSelectedBackground } from "@/lib/home/use-selected-background";
 import { HOME_PAGE_COUNT, getHomePageIndexFromScroll, nextHomePageIndex } from "@/lib/home/sections";
 import { AboutSection } from "@/components/home/about-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { MoreSection } from "@/components/home/more-section";
 import { PageDots } from "@/components/home/page-dots";
 
-type HomePageProps = { backgrounds: string[] };
+type HomePageProps = { backgrounds: BackgroundEntry[] };
 
 export function HomePage({ backgrounds }: HomePageProps) {
+  const environment = useBackgroundEnvironment();
+  const backgroundSrc = useSelectedBackground(backgrounds, environment);
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<BubbleParticle[]>([]);
@@ -22,7 +27,7 @@ export function HomePage({ backgrounds }: HomePageProps) {
   const wheelLockRef = useRef(false);
   const [bubbles] = useState(() => createBubbleVisuals(HOME_BUBBLE_TERMS, () => 0.5));
   const [activePage, setActivePage] = useState(0);
-  const [backgroundIndex, setBackgroundIndex] = useState(0);
+  const [returning, setReturning] = useState(false);
   const [accent, setAccent] = useState(() => typeof window === "undefined" ? DEFAULT_ACCENT : parseAppearance(localStorage.getItem(APPEARANCE_STORAGE_KEY)).accent);
   const [bubbleColorRange, setBubbleColorRange] = useState(() => typeof window === "undefined" ? defaultAppearance.bubbleColorRange : parseAppearance(localStorage.getItem(APPEARANCE_STORAGE_KEY)).bubbleColorRange);
 
@@ -46,12 +51,6 @@ export function HomePage({ backgrounds }: HomePageProps) {
     window.addEventListener(APPEARANCE_CHANGE_EVENT, onAppearanceChange);
     return () => window.removeEventListener(APPEARANCE_CHANGE_EVENT, onAppearanceChange);
   }, []);
-
-  useEffect(() => {
-    if (backgrounds.length < 2) return;
-    const timer = window.setInterval(() => setBackgroundIndex((index) => (index + 1) % backgrounds.length), 7200);
-    return () => window.clearInterval(timer);
-  }, [backgrounds]);
 
   useEffect(() => {
     const root = scrollRef.current;
@@ -203,6 +202,18 @@ export function HomePage({ backgrounds }: HomePageProps) {
     };
   }, [accent, bubbleColorRange, bubbles]);
 
+  const returnToGate = async () => {
+    if (returning) return;
+    setReturning(true);
+    try {
+      const response = await fetch("/api/lock", { method: "POST", cache: "no-store" });
+      if (!response.ok) throw new Error("Unable to lock session");
+      window.location.replace("/");
+    } catch {
+      setReturning(false);
+    }
+  };
+
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     pointerRef.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -219,11 +230,13 @@ export function HomePage({ backgrounds }: HomePageProps) {
       style={pageStyle}
     >
       <HeroSection
-        backgrounds={backgrounds}
-        backgroundIndex={backgroundIndex}
+        backgroundSrc={backgroundSrc}
+        environment={environment}
         bubbles={bubbles}
         canvasRef={canvasRef}
         onExplore={() => scrollToPage(1)}
+        onReturnToGate={returnToGate}
+        returning={returning}
       />
       <AboutSection onExplore={() => scrollToPage(2)} />
       <MoreSection onHome={() => scrollToPage(0)} />

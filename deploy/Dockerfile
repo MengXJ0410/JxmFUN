@@ -22,6 +22,7 @@ ENV NODE_ENV=production \
 RUN apk add --no-cache tzdata
 
 COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/config ./config
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 

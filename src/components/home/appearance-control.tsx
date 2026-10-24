@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Moon, Palette, Sun } from "lucide-react";
+import { Images, Moon, Palette, Sun } from "lucide-react";
 import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, parseAppearance, type AppearancePreferences } from "@/lib/appearance";
 
 const COLORS = ["#6de7ff", "#7c9dff", "#ff8fa3", "#ffd166"];
@@ -39,6 +40,7 @@ export function AppearanceControl() {
       <div className="appearance-colors">{COLORS.map((color) => <button type="button" key={color} aria-label={`使用颜色 ${color}`} className={appearance.accent === color ? "is-active" : ""} style={{ backgroundColor: color }} onClick={() => update({ ...appearance, accent: color })} />)}</div>
       <label className="appearance-range"><span>气泡活跃度</span><input type="range" min="0" max="200" value={appearance.bubbleActivity} onChange={(event) => update({ ...appearance, bubbleActivity: Number(event.target.value) })} /></label>
       <label className="appearance-range"><span>气泡色彩范围</span><input type="range" min="0" max="100" value={appearance.bubbleColorRange} onChange={(event) => update({ ...appearance, bubbleColorRange: Number(event.target.value) })} /></label>
+      <Link className="appearance-link" href="/backgrounds"><Images size={15} />背景图配置</Link>
       <button className="appearance-reset" type="button" onClick={() => update({ ...defaultAppearance, accent: DEFAULT_ACCENT })}>恢复默认</button>
     </div>}
   </div>;
