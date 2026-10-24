@@ -115,8 +115,11 @@ export function readState() {
   };
 }
 
-export function nextUploadName() {
-  const existing = new Set(existsSync(IMAGES_DIR) ? readdirSync(IMAGES_DIR) : []);
+export function nextUploadName(config = readConfig()) {
+  const existing = new Set(config.backgrounds.map((entry) => entry.file));
+  if (existsSync(IMAGES_DIR)) {
+    for (const file of readdirSync(IMAGES_DIR)) existing.add(file);
+  }
   for (let index = 1; index < 100000; index += 1) {
     const file = `bg_${String(index).padStart(3, "0")}.webp`;
     if (!existing.has(file)) return file;
@@ -135,12 +138,12 @@ export function uploadBackground(buffer) {
     throw new Error("Only WebP images are supported");
   }
 
-  const file = nextUploadName();
+  const config = readConfig();
+  const file = nextUploadName(config);
   const fullPath = join(IMAGES_DIR, file);
   writeFileSync(fullPath, Buffer.from(buffer), { flag: "wx" });
 
   try {
-    const config = readConfig();
     config.backgrounds.push({ file, theme: "both", platform: "both" });
     writeConfig(config);
     return { file, state: readState() };
