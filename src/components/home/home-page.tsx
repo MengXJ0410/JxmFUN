@@ -1,13 +1,13 @@
-"use client";
+﻿"use client";
 
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 import { HOME_BUBBLE_TERMS } from "@/content/home";
 import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, deriveBubbleColor, parseAppearance, type AppearanceChangeDetail } from "@/lib/appearance";
 import { advanceParticles, createBubbleVisuals, placeBubbleParticles, type BubbleParticle, type BubbleRect } from "@/lib/home/bubbles";
-import { type BackgroundEntry } from "@/lib/home/backgrounds";
+import { filterBackgrounds, type BackgroundEntry } from "@/lib/home/backgrounds";
 import { useBackgroundEnvironment } from "@/lib/home/use-background-environment";
-import { useSelectedBackground } from "@/lib/home/use-selected-background";
+import { useBackgroundRotation } from "@/lib/home/use-background-rotation";
 import { HOME_PAGE_COUNT, getHomePageIndexFromScroll, nextHomePageIndex } from "@/lib/home/sections";
 import { AboutSection } from "@/components/home/about-section";
 import { HeroSection } from "@/components/home/hero-section";
@@ -18,7 +18,8 @@ type HomePageProps = { backgrounds: BackgroundEntry[] };
 
 export function HomePage({ backgrounds }: HomePageProps) {
   const environment = useBackgroundEnvironment();
-  const backgroundSrc = useSelectedBackground(backgrounds, environment);
+  const backgroundCandidates = filterBackgrounds(backgrounds, environment);
+  const rotation = useBackgroundRotation(backgrounds, environment);
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<BubbleParticle[]>([]);
@@ -217,6 +218,11 @@ export function HomePage({ backgrounds }: HomePageProps) {
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     pointerRef.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const node = event.currentTarget;
+    const x = (event.clientX - rect.left) / Math.max(1, rect.width) - 0.5;
+    const y = (event.clientY - rect.top) / Math.max(1, rect.height) - 0.5;
+    node.style.setProperty("--bg-shift-x", `${(x * -4.4).toFixed(2)}%`);
+    node.style.setProperty("--bg-shift-y", `${(y * -2.8).toFixed(2)}%`);
   };
   const pageStyle = { "--accent": accent } as CSSProperties;
 
@@ -226,11 +232,17 @@ export function HomePage({ backgrounds }: HomePageProps) {
       ref={scrollRef}
       tabIndex={0}
       onPointerMove={onPointerMove}
-      onPointerLeave={() => { pointerRef.current = null; }}
+      onPointerLeave={(event) => {
+        pointerRef.current = null;
+        event.currentTarget.style.setProperty("--bg-shift-x", "0%");
+        event.currentTarget.style.setProperty("--bg-shift-y", "0%");
+      }}
       style={pageStyle}
     >
       <HeroSection
-        backgroundSrc={backgroundSrc}
+        backgrounds={backgroundCandidates}
+        currentFile={rotation.current?.file ?? null}
+        previousFile={rotation.previous?.file ?? null}
         environment={environment}
         bubbles={bubbles}
         canvasRef={canvasRef}

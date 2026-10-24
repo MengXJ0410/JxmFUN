@@ -1,12 +1,14 @@
-import { type CSSProperties, type RefObject } from "react";
+﻿import { type CSSProperties, type RefObject } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { AppearanceControl } from "@/components/home/appearance-control";
 import { HOME_COPY } from "@/content/home";
 import { responsiveBubbleSize, type BubbleVisual } from "@/lib/home/bubbles";
-import type { BackgroundEnvironment } from "@/lib/home/backgrounds";
+import type { BackgroundEntry, BackgroundEnvironment } from "@/lib/home/backgrounds";
 
 type HeroSectionProps = {
-  backgroundSrc: string | null;
+  backgrounds: BackgroundEntry[];
+  currentFile: string | null;
+  previousFile: string | null;
   environment: BackgroundEnvironment;
   bubbles: BubbleVisual[];
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -15,19 +17,25 @@ type HeroSectionProps = {
   returning: boolean;
 };
 
-export function HeroSection({ backgroundSrc, environment, bubbles, canvasRef, onExplore, onReturnToGate, returning }: HeroSectionProps) {
+export function HeroSection({ backgrounds, currentFile, previousFile, environment, bubbles, canvasRef, onExplore, onReturnToGate, returning }: HeroSectionProps) {
   return (
-    <section className={`home-page home-hero home-theme-${environment.theme}${backgroundSrc ? " has-background" : ""}`} aria-label="首页">
+    <section className={`home-page home-hero home-theme-${environment.theme}${currentFile ? " has-background" : ""}`} aria-label="首页">
       <div className="home-backgrounds" aria-hidden="true">
-        {backgroundSrc ? (
-          <div
-            key={backgroundSrc}
-            className="home-background-layer is-active"
-            style={{ backgroundImage: `url("${backgroundSrc}")` }}
-          />
-        ) : null}
+        <div className="home-background-parallax">
+          {backgrounds.map((entry) => (
+            <div
+              key={entry.file}
+              className={`home-background-layer${entry.file === currentFile ? " is-current" : ""}${entry.file === previousFile ? " is-previous" : ""}`}
+            >
+              <div
+                className="home-background-drift"
+                style={{ backgroundImage: `url("${entry.src}")` }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-      {backgroundSrc ? <div className="home-scrim" aria-hidden="true" /> : null}
+      {currentFile ? <div className="home-scrim" aria-hidden="true" /> : null}
       <canvas className="home-bubble-canvas" ref={canvasRef} aria-hidden="true" />
       <div className="home-bubble-field" aria-hidden="true">
         {bubbles.map((bubble, index) => (

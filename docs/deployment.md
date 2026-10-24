@@ -97,7 +97,7 @@ npm run docker:up
 背景图属性位于 `config/backgrounds.json`，图片位于 `public/images/backgrounds/`。`deploy/compose.yml` 会挂载：
 
 - `config/` → `/app/config`（可写，供站内 `/backgrounds` 保存配置）
-- `public/images/backgrounds/` → `/app/public/images/backgrounds`（只读）
+- `public/images/backgrounds/` → `/app/public/images/backgrounds`（可写，供站内上传）
 
 已登录用户可直接访问 `/backgrounds`，也可以从首页外观设置面板进入。新增或替换图片、修改配置后执行：
 
@@ -114,7 +114,8 @@ npm run docker:recreate
 - 手机断点：`760px`
 - 未匹配到图片时使用 `both/both` 保底；无保底图时显示纯白/纯黑
 - 站内 `/backgrounds` 仅已登录用户可访问，保存会立即写入 `config/backgrounds.json`
-- 容器内配置目录可写；图片目录只读，替换图片通过宿主机目录完成
+- 站内上传仅支持 WebP，单文件上限 20MB，自动按最小未使用编号命名
+- 容器内配置目录和图片目录均可写，上传文件直接写入宿主机目录
 
 配置维护可使用图形界面：
 
@@ -122,7 +123,7 @@ npm run docker:recreate
 npm run backgrounds:gui
 ```
 
-默认打开 `http://127.0.0.1:4173`，可查看缩略图、预览大图和直接修改属性。更多命令行用法见 README。
+默认打开 `http://127.0.0.1:4173`，可查看缩略图、预览大图、修改属性并上传 WebP。更多命令行用法见 README。
 
 ## Cloudflare Tunnel
 

@@ -12,6 +12,8 @@ const CONFIG_PATH = join(process.cwd(), "config", "backgrounds.json");
 const IMAGES_DIR = join(process.cwd(), "public", "images", "backgrounds");
 const IMAGE_FILE = /^[^/\\]+\.(?:webp|png|jpe?g|avif|gif)$/i;
 const SYNC_FILE = /^bg_[^/\\]+\.webp$/i;
+const UPLOAD_LIMIT = 20 * 1024 * 1024;
+const UPLOAD_NAME = /^bg_(\d+)\.webp$/i;
 
 type StoredEntry = {
   file: string;
@@ -163,4 +165,53 @@ export function syncBackgroundConfig(prune: boolean) {
 
   writeConfig(config);
   return { state: toState(config), added, removed };
+}
+
+export function uploadBackground(buffer: Buffer, values: { theme?: unknown; platform?: unknown } = {}) {
+  if (buffer.length === 0) throw new Error("Empty file");
+  if (buffer.length > UPLOAD_LIMIT) throw new Error("File is larger than 20MB");
+  if (
+    buffer.length < 12 ||
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    throw new Error("Only WebP images are supported");
+  }
+  if (values.theme !== undefined && !isBackgroundTheme(values.theme)) throw new Error("Invalid theme");
+  if (values.platform !== undefined && !isBackgroundPlatform(values.platform)) throw new Error("Invalid platform");
+
+  const file = nextUploadName();
+  const fullPath = join(IMAGES_DIR, file);
+  writeFileSync(fullPath, buffer, { flag: "wx" });
+
+  try {
+    const config = readConfig();
+    config.backgrounds.push({
+      file,
+      theme: (values.theme as BackgroundTheme | undefined) ?? "both",
+      platform: (values.platform as BackgroundPlatform | undefined) ?? "both",
+    });
+    writeConfig(config);
+    return { file, state: toState(config) };
+  } catch (error) {
+    try {
+      unlinkSync(fullPath);
+    } catch {
+      // Keep the original error.
+    }
+    throw error;
+  }
+}
+
+function nextUploadName() {
+  const existing = new Set(existsSync(IMAGES_DIR) ? readdirSync(IMAGES_DIR) : []);
+  for (let index = 1; index < 100000; index += 1) {
+    const file = `bg_${String(index).padStart(3, "0")}.webp`;
+    if (!existing.has(file)) return file;
+  }
+  throw new Error("No available background file name");
+}
+
+export function isUploadName(file: string) {
+  return UPLOAD_NAME.test(file);
 }

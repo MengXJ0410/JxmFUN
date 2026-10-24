@@ -13,6 +13,7 @@ import {
   removeEntry,
   syncConfig,
   updateEntry,
+  uploadBackground,
 } from "./backgrounds-lib.mjs";
 
 const HOST = "127.0.0.1";
@@ -113,6 +114,27 @@ async function handle(request, response) {
     const body = await readBody(request);
     const result = syncConfig({ prune: body.prune === true });
     sendJson(response, 200, { ok: true, result, state: readState() });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/upload") {
+    const body = await new Promise((resolve, reject) => {
+      const chunks = [];
+      let size = 0;
+      request.on("data", (chunk) => {
+        size += chunk.length;
+        if (size > 20 * 1024 * 1024) {
+          request.destroy();
+          reject(new Error("File is larger than 20MB"));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      request.on("end", () => resolve(Buffer.concat(chunks)));
+      request.on("error", reject);
+    });
+    const result = uploadBackground(body);
+    sendJson(response, 200, { ok: true, ...result });
     return;
   }
 

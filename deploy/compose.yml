@@ -1,4 +1,4 @@
-name: jxmfun
+﻿name: jxmfun
 
 services:
   mxjweb:
@@ -14,7 +14,7 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - ../config:/app/config
-      - ../public/images/backgrounds:/app/public/images/backgrounds:ro
+      - ../public/images/backgrounds:/app/public/images/backgrounds
     environment:
       NODE_ENV: production
       PORT: "3000"

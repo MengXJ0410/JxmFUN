@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BackgroundEntry,
   BackgroundPlatform,
   BackgroundTheme,
@@ -32,4 +32,5 @@ export type BackgroundMutationResult = {
   state: BackgroundState;
   added?: number;
   removed?: number;
+  file?: string;
 };

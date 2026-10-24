@@ -1,4 +1,4 @@
-.page {
+﻿.page {
   --bg: #071019;
   --panel: rgba(16, 28, 38, 0.86);
   --panel-soft: rgba(255, 255, 255, 0.045);
@@ -79,6 +79,8 @@
 .footer code {
   color: var(--text);
 }
+
+.fileInput { display: none; }
 
 .toolbar {
   display: flex;

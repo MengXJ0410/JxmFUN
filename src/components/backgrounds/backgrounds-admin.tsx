@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon, RefreshCw, Save, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   BackgroundMutationResult,
   BackgroundState,
@@ -32,6 +32,7 @@ export function BackgroundsAdmin() {
   const [platform, setPlatform] = useState<BackgroundPlatform>("both");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<Status>({ text: "", kind: "" });
+  const uploadRef = useRef<HTMLInputElement>(null);
 
   const entries = useMemo<ViewEntry[]>(() => {
     if (!state) return [];
@@ -133,6 +134,43 @@ export function BackgroundsAdmin() {
     void run({ action: "sync", prune }, prune ? "已清理缺失条目" : "已同步背景目录");
   };
 
+  const upload = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith(".webp") && file.type !== "image/webp") {
+      setStatus({ text: "只支持 WebP 图片", kind: "error" });
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setStatus({ text: "文件不能超过 20MB", kind: "error" });
+      return;
+    }
+    setBusy(true);
+    setStatus({ text: "上传中...", kind: "" });
+    try {
+      const response = await fetch("/api/backgrounds/upload", {
+        method: "POST",
+        headers: { "Content-Type": "image/webp" },
+        body: file,
+        cache: "no-store",
+      });
+      const data = (await response.json()) as BackgroundMutationResult & { error?: string };
+      if (!response.ok) throw new Error(data.error || "上传失败");
+      if (data.state) {
+        setState(data.state);
+        const target = data.file ?? data.state.images[0]?.file ?? null;
+        setSelected(target);
+        const entry = data.state.entries.find((item) => item.file === target);
+        setTheme(entry?.theme ?? "both");
+        setPlatform(entry?.platform ?? "both");
+      }
+      setStatus({ text: `已上传 ${data.file ?? ""}`, kind: "ok" });
+    } catch (error) {
+      setStatus({ text: error instanceof Error ? error.message : "上传失败", kind: "error" });
+    } finally {
+      setBusy(false);
+      if (uploadRef.current) uploadRef.current.value = "";
+    }
+  };
+
   const reload = async () => {
     setBusy(true);
     try {
@@ -161,7 +199,18 @@ export function BackgroundsAdmin() {
             <h1>背景图配置</h1>
             <p>保存后执行 <code>npm run docker:recreate</code> 生效</p>
           </header>
+          <input
+            ref={uploadRef}
+            className={styles.fileInput}
+            type="file"
+            accept="image/webp,.webp"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void upload(file);
+            }}
+          />
           <div className={styles.toolbar}>
+            <button type="button" onClick={() => uploadRef.current?.click()} disabled={busy}>上传图片</button>
             <button type="button" onClick={() => sync(false)} disabled={busy}>同步目录</button>
             <button type="button" onClick={() => sync(true)} disabled={busy}>清理缺失</button>
             <button type="button" onClick={() => void reload()} disabled={busy}>刷新</button>
@@ -250,7 +299,7 @@ export function BackgroundsAdmin() {
 
           <div className={styles.hint}>
             <ImageIcon size={15} />
-            <span>theme 跟随浅色/深色，platform 以 760px 为界；无匹配时使用 both/both 保底。</span>
+            <span>theme 跟随浅色/深色，platform 以 760px 为界；无匹配时使用 both/both 保底。上传仅支持 WebP，自动命名为 bg_XXX。</span>
           </div>
 
           <footer className={styles.footer}>

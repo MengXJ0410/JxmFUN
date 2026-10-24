@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -254,7 +254,9 @@
         <h1>背景图配置</h1>
         <p>修改会直接写入 <code>config/backgrounds.json</code>。保存后执行 <code>npm run docker:recreate</code> 生效。</p>
       </header>
+      <input id="file" type="file" accept="image/webp,.webp" hidden>
       <div class="toolbar">
+        <button id="upload" type="button">上传图片</button>
         <button id="sync" type="button">同步目录</button>
         <button id="prune" type="button">清理缺失</button>
         <button id="reload" type="button">刷新</button>
@@ -311,6 +313,8 @@
     const removeEl = document.querySelector("#remove");
     const statusEl = document.querySelector("#status");
     const syncEl = document.querySelector("#sync");
+    const uploadEl = document.querySelector("#upload");
+    const fileEl = document.querySelector("#file");
     const pruneEl = document.querySelector("#prune");
     const reloadEl = document.querySelector("#reload");
 
@@ -440,6 +444,42 @@
       applyState(data.state);
       if (message) setStatus(message, "ok");
     }
+
+    uploadEl.addEventListener("click", () => fileEl.click());
+
+    fileEl.addEventListener("change", async () => {
+      const file = fileEl.files?.[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".webp") && file.type !== "image/webp") {
+        setStatus("只支持 WebP 图片", "error");
+        fileEl.value = "";
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        setStatus("文件不能超过 20MB", "error");
+        fileEl.value = "";
+        return;
+      }
+      uploadEl.disabled = true;
+      setStatus("上传中...");
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "image/webp" },
+          body: file,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "上传失败");
+        applyState(data.state);
+        selectedFile = data.file;
+        setStatus(`已上传 ${data.file}`, "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        uploadEl.disabled = false;
+        fileEl.value = "";
+      }
+    });
 
     syncEl.addEventListener("click", async () => {
       syncEl.disabled = true;

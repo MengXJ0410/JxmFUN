@@ -127,7 +127,8 @@ docs/
 - `theme`：`day` / `night` / `both`
 - `platform`：`computer` / `phone` / `both`
 - 手机断点：`760px`
-- 页面只在浅色/深色或窗口宽度变化时重新随机选图
+- 首次进入随机起点，之后每 5 秒按配置顺序轮换
+- 每张背景从右向左漂移，并带鼠标视差
 - 无匹配时优先使用 `theme=both` 且 `platform=both` 的保底图；仍无图时显示纯白/纯黑
 
 图形界面（推荐）：
@@ -136,7 +137,7 @@ docs/
 npm run backgrounds:gui
 ```
 
-默认打开 `http://127.0.0.1:4173`，左侧显示缩略图和当前属性，右侧可预览大图并修改 `theme` / `platform`。不自动打开浏览器或换端口：
+默认打开 `http://127.0.0.1:4173`，左侧显示缩略图和当前属性，右侧可预览大图、修改 `theme` / `platform`，并上传 WebP 背景图。上传会自动命名为下一个 `bg_XXX.webp`。不自动打开浏览器或换端口：
 
 ```bash
 npm run backgrounds:gui -- --no-open --port 4174
@@ -153,7 +154,7 @@ npm run backgrounds -- set bg_001 theme=night platform=computer
 npm run backgrounds -- remove bg_001
 ```
 
-`config/` 和 `public/images/backgrounds/` 都会挂载到容器中。现在也可以直接访问站点的 `/backgrounds` 页面，在浏览器里查看缩略图、预览并编辑属性；保存立即写入配置。
+`config/` 和 `public/images/backgrounds/` 都会挂载到容器中。已登录后可直接访问 `/backgrounds`，查看缩略图、预览、编辑属性，并上传 WebP 背景图；上传会自动命名为下一个 `bg_XXX.webp`。
 
 在 Docker 中修改背景后执行：
 

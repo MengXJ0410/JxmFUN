@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+﻿import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, join, relative } from "node:path";
 import process from "node:process";
 
@@ -9,6 +9,7 @@ export const THEMES = new Set(["day", "night", "both"]);
 export const PLATFORMS = new Set(["computer", "phone", "both"]);
 export const IMAGE_FILE = /^[^/\\]+\.(?:webp|png|jpe?g|avif|gif)$/i;
 export const SYNC_FILE = /^bg_[^/\\]+\.webp$/i;
+export const UPLOAD_LIMIT = 20 * 1024 * 1024;
 
 export function readConfig() {
   if (!existsSync(CONFIG_PATH)) {
@@ -112,4 +113,43 @@ export function readState() {
     entries,
     missing: entries.filter((entry) => !entry.exists),
   };
+}
+
+export function nextUploadName() {
+  const existing = new Set(existsSync(IMAGES_DIR) ? readdirSync(IMAGES_DIR) : []);
+  for (let index = 1; index < 100000; index += 1) {
+    const file = `bg_${String(index).padStart(3, "0")}.webp`;
+    if (!existing.has(file)) return file;
+  }
+  throw new Error("No available background file name");
+}
+
+export function uploadBackground(buffer) {
+  if (buffer.length === 0) throw new Error("Empty file");
+  if (buffer.length > UPLOAD_LIMIT) throw new Error("File is larger than 20MB");
+  if (
+    buffer.length < 12 ||
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    throw new Error("Only WebP images are supported");
+  }
+
+  const file = nextUploadName();
+  const fullPath = join(IMAGES_DIR, file);
+  writeFileSync(fullPath, Buffer.from(buffer), { flag: "wx" });
+
+  try {
+    const config = readConfig();
+    config.backgrounds.push({ file, theme: "both", platform: "both" });
+    writeConfig(config);
+    return { file, state: readState() };
+  } catch (error) {
+    try {
+      unlinkSync(fullPath);
+    } catch {
+      // Keep the original error.
+    }
+    throw error;
+  }
 }
