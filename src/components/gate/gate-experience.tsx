@@ -18,9 +18,10 @@ type GateExperienceProps = {
 export function GateExperience({ unlocked, backgrounds }: GateExperienceProps) {
   const router = useRouter();
   const environment = useBackgroundEnvironment();
-  const [refreshing, setRefreshing] = useState(false);
+  const [granted, setGranted] = useState(unlocked);
   const [leaving, setLeaving] = useState(false);
   const [dismissed, setDismissed] = useState(unlocked);
+  const showHome = granted || unlocked;
 
   useEffect(() => {
     const candidates = filterBackgrounds(backgrounds, environment);
@@ -28,10 +29,10 @@ export function GateExperience({ unlocked, backgrounds }: GateExperienceProps) {
   }, [backgrounds, environment]);
 
   useEffect(() => {
-    if (!unlocked || !refreshing || dismissed) return;
+    if (!granted || dismissed) return;
     const frame = window.requestAnimationFrame(() => setLeaving(true));
     return () => window.cancelAnimationFrame(frame);
-  }, [unlocked, refreshing, dismissed]);
+  }, [granted, dismissed]);
 
   useEffect(() => {
     if (!leaving) return;
@@ -40,14 +41,13 @@ export function GateExperience({ unlocked, backgrounds }: GateExperienceProps) {
   }, [leaving]);
 
   const onUnlocked = useCallback(() => {
-    if (refreshing) return;
-    setRefreshing(true);
+    setGranted(true);
     startTransition(() => router.refresh());
-  }, [refreshing, router]);
+  }, [router]);
 
   return (
     <>
-      {unlocked ? <HomePage key="home" backgrounds={backgrounds} /> : null}
+      {showHome ? <HomePage key="home" backgrounds={backgrounds} /> : null}
       {!dismissed ? <GateScreen key="gate" onUnlocked={onUnlocked} leaving={leaving} /> : null}
     </>
   );
