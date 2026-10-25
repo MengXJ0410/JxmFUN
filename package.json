@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "backgrounds": "node scripts/backgrounds.mjs",
     "backgrounds:gui": "node scripts/backgrounds-gui.mjs",
+    "dev:ui": "node scripts/dev-launcher.mjs",
     "docker:up": "docker compose --env-file .env -f deploy/compose.yml up -d --build",
     "docker:recreate": "docker compose --env-file .env -f deploy/compose.yml up -d --force-recreate",
     "docker:ps": "docker compose --env-file .env -f deploy/compose.yml ps",
