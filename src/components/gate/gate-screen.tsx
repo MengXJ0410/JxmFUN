@@ -150,6 +150,7 @@ export function GateScreen({ onUnlocked, leaving }: GateScreenProps) {
   }, [lockedUntil]);
 
   useEffect(() => {
+    unmountedRef.current = false;
     return () => {
       unmountedRef.current = true;
       window.clearTimeout(grantTimerRef.current);
