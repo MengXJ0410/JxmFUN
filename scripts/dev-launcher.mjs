@@ -65,7 +65,7 @@ function spawnTool(tool, toolArgs, options) {
   return spawn(toolName(tool), toolArgs, options);
 }
 
-function startJob(kind, tool, toolArgs) {
+function createJob(kind) {
   const id = `${kind}-${Date.now()}`;
   const job = {
     id,
@@ -77,37 +77,84 @@ function startJob(kind, tool, toolArgs) {
     startedAt: Date.now(),
   };
   jobs.set(id, job);
+  return job;
+}
 
+function pushLines(job, chunk) {
+  const text = chunk.toString("utf8");
+  for (const line of text.replace(/\r/g, "").split("\n")) {
+    if (!line) continue;
+    job.lines.push(line);
+  }
+  if (job.lines.length > 4000) job.lines.splice(0, job.lines.length - 4000);
+}
+
+function attachJob(job, child) {
+  job.child = child;
+  child.stdout.on("data", (chunk) => pushLines(job, chunk));
+  child.stderr.on("data", (chunk) => pushLines(job, chunk));
+  child.on("error", (error) => {
+    job.lines.push(`[launcher] ${error.message}`);
+    job.done = true;
+    job.code = -1;
+  });
+}
+
+function startJob(kind, tool, toolArgs) {
+  const job = createJob(kind);
   const child = spawnTool(tool, toolArgs, {
     cwd: ROOT,
     shell: false,
     windowsHide: true,
     env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" },
   });
-  job.child = child;
-
-  const push = (chunk) => {
-    const text = chunk.toString("utf8");
-    for (const line of text.replace(/\r/g, "").split("\n")) {
-      if (!line) continue;
-      job.lines.push(line);
-    }
-    if (job.lines.length > 4000) job.lines.splice(0, job.lines.length - 4000);
-  };
-
-  child.stdout.on("data", push);
-  child.stderr.on("data", push);
-  child.on("error", (error) => {
-    job.lines.push(`[launcher] ${error.message}`);
-    job.done = true;
-    job.code = -1;
-  });
+  attachJob(job, child);
   child.on("close", (code) => {
     job.done = true;
     job.code = code;
     job.lines.push(`[launcher] 进程结束，退出码 ${code}`);
   });
+  return job;
+}
 
+function startChain(kind, commands) {
+  const job = createJob(kind);
+  let index = 0;
+  let failed = null;
+
+  const next = () => {
+    if (index >= commands.length) {
+      if (failed !== null) job.lines.push(`[launcher] 有步骤失败，退出码 ${failed}`);
+      job.done = true;
+      job.code = failed ?? 0;
+      return;
+    }
+
+    const step = commands[index];
+    index += 1;
+    job.lines.push(`[launcher] $ ${step.tool} ${step.args.join(" ")}`);
+
+    const child = spawnTool(step.tool, step.args, {
+      cwd: ROOT,
+      shell: false,
+      windowsHide: true,
+      env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" },
+    });
+    job.child = child;
+    child.stdout.on("data", (chunk) => pushLines(job, chunk));
+    child.stderr.on("data", (chunk) => pushLines(job, chunk));
+    child.on("error", (error) => {
+      job.lines.push(`[launcher] ${error.message}`);
+      if (failed === null) failed = -1;
+      next();
+    });
+    child.on("close", (code) => {
+      if (code !== 0 && failed === null) failed = code;
+      next();
+    });
+  };
+
+  next();
   return job;
 }
 
@@ -171,7 +218,7 @@ async function serverStatus() {
     "-o", "ConnectTimeout=8",
     "mxj",
     "cd /home/mxjserver/website && git log --oneline -1 && echo '---STATUS---' && git status --porcelain | head -20 && echo '---DOCKER---' && docker ps --filter name=mxjweb --format '{{.Names}}|{{.Status}}|{{.Ports}}'",
-  ], 20_000);
+  ], 25_000);
 
   const repoPart = result.out.split("---STATUS---")[0]?.trim() || "";
   const afterStatus = result.out.split("---STATUS---")[1] || "";
@@ -295,7 +342,10 @@ async function handle(request, response) {
       if (status.branch !== "main") {
         return sendJson(response, 400, { error: `当前分支是 ${status.branch}，不是 main` });
       }
-      const job = startJob("push", "git", ["push", "origin", "main"]);
+      const job = startChain("push", [
+        { tool: "git", args: ["push", "origin", "main"] },
+        { tool: "git", args: ["push", "server", "main"] },
+      ]);
       return sendJson(response, 200, { ok: true, jobId: job.id });
     }
 
@@ -303,7 +353,7 @@ async function handle(request, response) {
       const job = startJob("deploy", "ssh", [
         "-o", "BatchMode=yes",
         "mxj",
-        "cd /home/mxjserver/website && git pull --ff-only && docker compose --env-file .env -f deploy/compose.yml up -d --build",
+        "cd /home/mxjserver/website && git fetch server && if [ -f config/backgrounds.json ]; then cp -f config/backgrounds.json /tmp/mxj-backgrounds.json; fi && git reset --hard server/main && if [ -f /tmp/mxj-backgrounds.json ]; then cp -f /tmp/mxj-backgrounds.json config/backgrounds.json; fi && docker compose --env-file .env -f deploy/compose.yml up -d --build",
       ]);
       return sendJson(response, 200, { ok: true, jobId: job.id });
     }
