@@ -35,6 +35,8 @@ services:
     user: "0:0"
     network_mode: none
     read_only: true
+    healthcheck:
+      disable: true
     security_opt:
       - no-new-privileges:true
     cap_drop:

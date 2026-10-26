@@ -152,12 +152,13 @@ async function collectDisk() {
 }
 
 async function collectHost() {
-  const [stat, meminfo, loadavg, uptime, hostname, version, cpuinfo, thermal, disk] = await Promise.all([
+  const [stat, meminfo, loadavg, uptime, hostname, hostRootHostname, version, cpuinfo, thermal, disk] = await Promise.all([
     readText(join(HOST_PROC, "stat")),
     readText(join(HOST_PROC, "meminfo")),
     readText(join(HOST_PROC, "loadavg")),
     readText(join(HOST_PROC, "uptime")),
     readText(join(HOST_PROC, "sys", "kernel", "hostname")),
+    readText(join(HOST_ROOT, "etc", "hostname")),
     readText(join(HOST_PROC, "version")),
     readText(join(HOST_PROC, "cpuinfo")),
     collectTemperature(),
@@ -177,7 +178,7 @@ async function collectHost() {
   const network = networkRates(await readText(join(HOST_PROC, "net", "dev")));
 
   return {
-    hostname: hostname.trim() || os.hostname(),
+    hostname: hostRootHostname.trim() || hostname.trim() || os.hostname(),
     kernel: version.trim(),
     uptimeSec,
     cpu: {
