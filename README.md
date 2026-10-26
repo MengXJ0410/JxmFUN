@@ -126,6 +126,20 @@ docs/
 - 全局样式：`src/app/globals.css`
 - 网关文案与动画时长：`src/content/gate.ts`
 - 网关样式：`src/components/gate/gate.module.css`
+- Live2D 台词：`src/content/live2d.ts`
+- Live2D 组件与样式：`src/components/live2d/`
+
+## Live2D 看板娘
+
+`/home` 右下角显示希罗看板娘，桌面默认显示半身、手机默认隐藏。模型资源在 `public/live2d/`，原始 VTube Studio 文件在 `public/hirolive2d/`（不入库）。
+
+- 主贴图：8192 原图；小纹理设备自动回退 4096 WebP
+- 重新生成资源：`python scripts/prepare-live2d.py`
+- 说明文档：[docs/live2d.md](docs/live2d.md)
+- 互动：头部视线跟随、待机东张西望、偶发抬手、点击表情、气泡台词、中键拖拽、鼠标穿透
+- 待机：鼠标离开或静止 3 秒后随机看四周，偶尔抬手 2–6 秒；点击只用抬手/嘟嘴，魔女笑暂不启用
+- 设置：右键人物或点左侧齿轮，可显示/隐藏、调整大小；面板与「外观设置」同款并跟随明暗模式
+- AI 对话：本次未接入，AstrBot 对接方案见 `docs/live2d.md`
 
 ### 背景图配置
 

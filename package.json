@@ -19,8 +19,10 @@
     "@tailwindcss/postcss": "^4.1.17",
     "lucide-react": "^0.563.0",
     "next": "^16.4.2",
+    "pixi.js": "^8.22.0",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "untitled-pixi-live2d-engine": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

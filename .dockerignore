@@ -1,5 +1,6 @@
 node_modules
 .next
+public/hirolive2d
 .git
 .gitignore
 .runtime

@@ -1,0 +1,260 @@
+.companion {
+  position: fixed;
+  z-index: 35;
+  pointer-events: none;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+.stagePassthrough,
+.stagePassthrough canvas {
+  pointer-events: none;
+}
+
+.bubble {
+  position: absolute;
+  right: 6%;
+  bottom: calc(100% + 10px);
+  z-index: 2;
+  max-width: min(260px, 82%);
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  border-radius: 14px;
+  background: rgba(7, 14, 26, 0.84);
+  color: #eef4ff;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+  animation: bubble-in 0.22s ease-out;
+}
+
+.loading {
+  position: absolute;
+  right: 10%;
+  bottom: 8%;
+  z-index: 3;
+  color: rgba(220, 236, 255, 0.7);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+}
+
+.error {
+  position: absolute;
+  right: 6%;
+  bottom: 6%;
+  z-index: 3;
+  color: #ffb4b4;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.controls {
+  position: absolute;
+  left: 8px;
+  top: 18%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.passthroughToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(225, 239, 255, 0.22);
+  border-radius: 999px;
+  padding: 0.32rem 0.56rem;
+  background: rgba(7, 15, 30, 0.62);
+  color: #dce8f7;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.passthroughToggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+}
+
+.passthroughToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.passthroughToggle[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, rgba(7, 15, 30, 0.72));
+  color: #f4fdff;
+}
+
+.passthroughDot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: rgba(220, 236, 255, 0.42);
+  box-shadow: 0 0 0 2px rgba(220, 236, 255, 0.08);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.passthroughToggle[aria-pressed="true"] .passthroughDot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.settingsButton {
+  flex: 0 0 auto;
+}
+
+.showButton {
+  position: fixed;
+  right: 18px;
+  bottom: 16px;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.18));
+  border-radius: 999px;
+  background: rgba(7, 14, 26, 0.8);
+  color: #eef4ff;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.showButton:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, rgba(7, 14, 26, 0.84));
+  transform: translateY(-1px);
+}
+
+.showButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+html[data-color-mode="light"] .bubble {
+  border-color: color-mix(in srgb, var(--accent) 40%, rgba(38, 76, 110, 0.18));
+  background: rgba(255, 255, 255, 0.92);
+  color: #172b42;
+  box-shadow: 0 12px 32px rgba(38, 76, 110, 0.18);
+}
+
+html[data-color-mode="light"] .loading {
+  color: rgba(38, 76, 110, 0.7);
+}
+
+html[data-color-mode="light"] .error {
+  color: #b42323;
+}
+
+html[data-color-mode="light"] .passthroughToggle {
+  border-color: rgba(38, 76, 110, 0.2);
+  background: rgba(255, 255, 255, 0.84);
+  color: #1b3148;
+}
+
+html[data-color-mode="light"] .passthroughToggle[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--accent) 55%, rgba(38, 76, 110, 0.18));
+  background: color-mix(in srgb, var(--accent) 14%, white);
+  color: #172b42;
+}
+
+html[data-color-mode="light"] .passthroughDot {
+  background: rgba(38, 76, 110, 0.35);
+  box-shadow: 0 0 0 2px rgba(38, 76, 110, 0.08);
+}
+
+html[data-color-mode="light"] .showButton {
+  border-color: color-mix(in srgb, var(--accent) 45%, rgba(38, 76, 110, 0.18));
+  background: rgba(255, 255, 255, 0.88);
+  color: #172b42;
+}
+
+html[data-color-mode="light"] .showButton:hover {
+  background: color-mix(in srgb, var(--accent) 12%, white);
+}
+
+@media (max-width: 760px) {
+  .controls {
+    left: 6px;
+    top: 18%;
+    gap: 5px;
+  }
+
+  .passthroughToggle {
+    padding: 0.28rem 0.46rem;
+    font-size: 0.58rem;
+  }
+
+  .bubble {
+    right: 4%;
+    bottom: calc(100% + 8px);
+    max-width: 78%;
+    font-size: 0.76rem;
+  }
+
+  .showButton {
+    right: 12px;
+    bottom: 12px;
+    min-width: 42px;
+    height: 42px;
+    font-size: 0.72rem;
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+  }
+
+  .passthroughToggle,
+  .showButton {
+    transition: none;
+  }
+}

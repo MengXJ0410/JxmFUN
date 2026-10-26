@@ -19,6 +19,11 @@ out/
 .runtime/
 data/uploads/
 
+# Live2D source assets: only the optimized model under public/live2d is committed
+public/hirolive2d/
+# Large Live2D texture is transferred directly to the server, not through Git
+public/live2d/hiro/textures/texture_00.png
+
 # Background sources: only webp is committed
 public/images/backgrounds/*.png
 public/images/backgrounds/*.jpg

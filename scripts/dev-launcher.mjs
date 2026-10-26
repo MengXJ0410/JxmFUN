@@ -12,8 +12,6 @@ const DEV_PORT = 3100;
 const DEV_URL = `http://127.0.0.1:${DEV_PORT}`;
 const PUBLIC_URL = "https://mxj.jxmfun.xyz/";
 const SYNC_EXCLUDES = [
-  "public/hirolive2d",
-  "public/hirolive2d/**",
   "docs/workbuddy2api-server.md",
 ];
 const DEPLOY_COMMAND = "cd /home/mxjserver/website && git fetch server && git reset --hard server/main && docker compose --env-file .env -f deploy/compose.yml up -d --build && sleep 6 && docker exec mxjmonitor test -s /app/.runtime/monitor.json && git log -1 --oneline && curl -fsS -o /dev/null http://127.0.0.1:3000/";
@@ -200,6 +198,8 @@ function startOneClickSync() {
       if (restore !== 0) job.lines.push("[launcher] 提示：next-env.d.ts 恢复失败，继续执行");
 
       const addArgs = [
+        "-c",
+        "core.autocrlf=false",
         "add",
         "-A",
         "--",
@@ -333,15 +333,39 @@ async function localHealth() {
   }
 }
 
-function stopDev() {
-  if (!devJob || devJob.done || !devJob.child) return false;
-  if (isWindows) {
-    spawn("taskkill", ["/PID", String(devJob.child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
-  } else {
-    devJob.child.kill("SIGTERM");
+async function listeningPids(port) {
+  if (!isWindows) return [];
+  const result = await runCommand("netstat", ["-ano", "-p", "tcp"], 10_000);
+  const pids = new Set();
+  for (const line of result.out.split("\n")) {
+    const match = line.match(new RegExp(`:${port}\\s+\\S+\\s+LISTENING\\s+(\\d+)`, "i"));
+    if (match) pids.add(match[1]);
+  }
+  return [...pids];
+}
+
+async function stopPort(port) {
+  const pids = await listeningPids(port);
+  for (const pid of pids) {
+    await runCommand("taskkill", ["/PID", pid, "/T", "/F"], 10_000);
+  }
+  return pids.length > 0;
+}
+
+async function stopDev() {
+  let stopped = false;
+  if (devJob && !devJob.done && devJob.child) {
+    if (isWindows) {
+      spawn("taskkill", ["/PID", String(devJob.child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
+    } else {
+      devJob.child.kill("SIGTERM");
+    }
+    stopped = true;
   }
   devJob = null;
-  return true;
+  if (await stopPort(DEV_PORT)) stopped = true;
+  if (stopped) await sleep(300);
+  return stopped;
 }
 
 function sleep(ms) {
@@ -349,7 +373,7 @@ function sleep(ms) {
 }
 
 async function startDev() {
-  stopDev();
+  await stopDev();
   const job = startJob("dev", "npm", ["run", "dev", "--", "-p", String(DEV_PORT)]);
   devJob = job;
   void waitAndOpen();
@@ -420,7 +444,7 @@ async function handle(request, response) {
     }
 
     if (body.action === "stop-dev") {
-      return sendJson(response, 200, { ok: true, stopped: stopDev() });
+      return sendJson(response, 200, { ok: true, stopped: await stopDev() });
     }
 
     if (body.action === "sync-all") {
