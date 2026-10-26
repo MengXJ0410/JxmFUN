@@ -20,7 +20,11 @@ out/
 data/uploads/
 
 # Live2D source assets: only the optimized model under public/live2d is committed
-public/hirolive2d/
+# 设置图标的高清源图保留在本地，只有 128×128 的 tiny 版本入库/进镜像
+public/live2d/ui/hiro-settings-01.png
+public/live2d/ui/hiro-settings-01.webp
+public/live2d/ui/hiro-settings-02.png
+public/live2d/ui/hiro-settings-02-small.png
 # Large Live2D texture is transferred directly to the server, not through Git
 public/live2d/hiro/textures/texture_00.png
 

@@ -10,7 +10,8 @@ public/live2d/
 │  ├─ live2dcubismcore.min.js   # Live2D Cubism 5 Core（官方原文件）
 │  └─ NOTICE.txt
 ├─ ui/
-│  └─ hiro-settings-02-tiny.png # 设置按钮图标（128×128 透明 PNG）
+│  ├─ hiro-settings-02-tiny.png # 设置按钮图标（128×128 透明 PNG，入库并进镜像）
+│  └─ hiro-settings-01/02*.png  # 高清源图，仅本地保留，不入库/不进镜像
 └─ hiro/
    ├─ hiro-4096.model3.json     # 默认模型，引用 4096 WebP
    ├─ hiro.model3.json          # 8192 原图模型，仅作备份，代码不再引用

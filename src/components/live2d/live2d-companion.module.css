@@ -132,10 +132,26 @@
   overflow: visible;
 }
 
+/* 去掉全局 appearance-trigger 的圆形底，只保留图标本身 */
+.controls .settingsButton {
+  width: 2.45rem;
+  height: 2.45rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.controls .settingsButton:hover {
+  border-color: transparent;
+  transform: none;
+}
+
 .settingsIcon {
   display: block;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 2.4rem;
+  height: 2.4rem;
   object-fit: contain;
   transform-origin: center;
   user-select: none;
@@ -143,7 +159,7 @@
 }
 
 .settingsIconFallback {
-  font-size: 0.82rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -184,12 +200,10 @@
   transform: translateY(0);
 }
 
-.controls .settingsButton.settingsActive {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 22%, rgba(7, 15, 30, 0.72));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
-    0 0 18px color-mix(in srgb, var(--accent) 22%, transparent);
+.controls .settingsButton.settingsActive .settingsIcon {
+  filter: drop-shadow(
+    0 0 5px color-mix(in srgb, var(--accent) 90%, transparent)
+  );
 }
 
 .showButton {
@@ -258,12 +272,10 @@ html[data-color-mode="light"] .settingsTip {
   box-shadow: 0 8px 20px rgba(31, 69, 107, 0.14);
 }
 
-html[data-color-mode="light"] .controls .settingsButton.settingsActive {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 16%, white);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent),
-    0 8px 20px rgba(31, 69, 107, 0.16);
+html[data-color-mode="light"] .controls .settingsButton.settingsActive .settingsIcon {
+  filter: drop-shadow(
+    0 0 5px color-mix(in srgb, var(--accent) 75%, transparent)
+  );
 }
 
 html[data-color-mode="light"] .showButton {
@@ -298,12 +310,12 @@ html[data-color-mode="light"] .showButton:hover {
   }
 
   .settingsIcon {
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 2.175rem;
+    height: 2.175rem;
   }
 
   .settingsIconFallback {
-    font-size: 0.76rem;
+    font-size: 0.9rem;
   }
 
   .settingsTip {
