@@ -1,6 +1,8 @@
 node_modules
 .next
 public/hirolive2d
+# 26MB 8192 原图只留在服务器做备份，不进镜像
+public/live2d/hiro/textures/texture_00.png
 .git
 .gitignore
 .runtime

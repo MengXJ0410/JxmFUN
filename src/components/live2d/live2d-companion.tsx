@@ -8,7 +8,6 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { Settings } from "lucide-react";
 import type { Application } from "pixi.js";
 import type { Live2DModel } from "untitled-pixi-live2d-engine/cubism";
 import {
@@ -31,11 +30,11 @@ import {
   LIVE2D_IDLE_STILL_MS,
   LIVE2D_MIN_TOP_PX,
   LIVE2D_MODEL_PATH,
-  LIVE2D_MODEL_PATH_FALLBACK,
   LIVE2D_PASSTHROUGH_STORAGE_KEY,
   LIVE2D_POSITION_STORAGE_KEY,
   LIVE2D_SCALE_STORAGE_KEY,
   LIVE2D_SESSION_KEY,
+  LIVE2D_SETTINGS_ICON_PATHS,
   LIVE2D_SIZE_DEFAULT,
   LIVE2D_SIZE_MAX,
   LIVE2D_SIZE_MIN,
@@ -146,6 +145,7 @@ export function Live2DCompanion() {
   const [settingsAnchor, setSettingsAnchor] = useState({ x: 12, y: 12 });
   const [status, setStatus] = useState<CompanionStatus>("idle");
   const [bubble, setBubble] = useState<string | null>(null);
+  const [iconStep, setIconStep] = useState(0);
 
   const showBubble = useCallback((text: string, duration = 6200) => {
     if (bubbleTimerRef.current) window.clearTimeout(bubbleTimerRef.current);
@@ -476,16 +476,7 @@ export function Live2DCompanion() {
         canvas.setAttribute("aria-hidden", "true");
         pixiApp.ticker.maxFPS = window.matchMedia("(max-width: 760px)").matches ? 30 : 60;
 
-        const renderer = pixiApp.renderer as unknown as {
-          gl?: WebGL2RenderingContext | WebGLRenderingContext;
-        };
-        const maxTextureSize = renderer.gl
-          ? renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE)
-          : 4096;
-        const modelPath =
-          maxTextureSize >= 8192 ? LIVE2D_MODEL_PATH : LIVE2D_MODEL_PATH_FALLBACK;
-
-        const live2dModel = await LIVE2D.Live2DModel.from(modelPath, {
+        const live2dModel = await LIVE2D.Live2DModel.from(LIVE2D_MODEL_PATH, {
           autoFocus: false,
           autoHitTest: false,
           anchorMode: "drawable",
@@ -810,21 +801,19 @@ export function Live2DCompanion() {
             className={`${styles.stage}${passthrough ? ` ${styles.stagePassthrough}` : ""}`}
             onContextMenu={onStageContextMenu}
           >
-            {status === "loading" ? <span className={styles.loading}>加载中</span> : null}
-            {status === "error" ? <span className={styles.error}>希罗加载失败</span> : null}
+            {status !== "ready" && status !== "error" ? (
+              <div className={styles.loadingCard} role="status" aria-live="polite">
+                <span className={styles.loadingTitle}>希罗回溯中……</span>
+                <span className={styles.loadingBar} aria-hidden="true" />
+              </div>
+            ) : null}
+            {status === "error" ? (
+              <div className={styles.errorCard} role="alert">
+                希罗加载失败
+              </div>
+            ) : null}
           </div>
           <div className={styles.controls}>
-            <button
-              type="button"
-              className={styles.passthroughToggle}
-              aria-pressed={passthrough}
-              aria-label="鼠标穿透"
-              title="鼠标穿透"
-              onClick={togglePassthrough}
-            >
-              <span className={styles.passthroughDot} aria-hidden="true" />
-              鼠标穿透
-            </button>
             <button
               ref={gearRef}
               type="button"
@@ -834,7 +823,21 @@ export function Live2DCompanion() {
               title="希罗设置"
               onClick={toggleSettingsFromGear}
             >
-              <Settings size={18} />
+              {iconStep < LIVE2D_SETTINGS_ICON_PATHS.length ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className={styles.settingsIcon}
+                  src={LIVE2D_SETTINGS_ICON_PATHS[iconStep]}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  onError={() => setIconStep((step) => step + 1)}
+                />
+              ) : (
+                <span className={styles.settingsIconFallback} aria-hidden="true">
+                  希
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -854,10 +857,12 @@ export function Live2DCompanion() {
           anchor={settingsAnchor}
           viewport={viewport}
           enabled={enabled}
+          passthrough={passthrough}
           scale={scale}
           ignoreRef={gearRef}
           onClose={closeSettings}
           onToggleEnabled={toggleEnabled}
+          onTogglePassthrough={togglePassthrough}
           onScaleChange={changeScale}
         />
       ) : null}

@@ -7,10 +7,12 @@ type Live2DSettingsPanelProps = {
   anchor: { x: number; y: number };
   viewport: { width: number; height: number };
   enabled: boolean;
+  passthrough: boolean;
   scale: number;
   ignoreRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
   onToggleEnabled: () => void;
+  onTogglePassthrough: () => void;
   onScaleChange: (value: number) => void;
 };
 
@@ -18,10 +20,12 @@ export function Live2DSettingsPanel({
   anchor,
   viewport,
   enabled,
+  passthrough,
   scale,
   ignoreRef,
   onClose,
   onToggleEnabled,
+  onTogglePassthrough,
   onScaleChange,
 }: Live2DSettingsPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -46,7 +50,7 @@ export function Live2DSettingsPanel({
   }, [ignoreRef, onClose]);
 
   const panelWidth = Math.min(304, Math.max(0, viewport.width - 32));
-  const panelHeight = 208;
+  const panelHeight = 258;
   const left = Math.min(
     Math.max(anchor.x, 12),
     Math.max(12, viewport.width - panelWidth - 12),
@@ -84,6 +88,14 @@ export function Live2DSettingsPanel({
         onClick={onToggleEnabled}
       >
         {enabled ? "隐藏人物" : "显示人物"}
+      </button>
+      <button
+        type="button"
+        className={`appearance-choice appearance-system${passthrough ? " is-on" : ""}`}
+        aria-pressed={passthrough}
+        onClick={onTogglePassthrough}
+      >
+        {passthrough ? "关闭鼠标穿透" : "开启鼠标穿透"}
       </button>
       <label className="appearance-range">
         <span>人物大小</span>
