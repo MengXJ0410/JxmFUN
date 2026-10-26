@@ -34,7 +34,7 @@ import {
   LIVE2D_POSITION_STORAGE_KEY,
   LIVE2D_SCALE_STORAGE_KEY,
   LIVE2D_SESSION_KEY,
-  LIVE2D_SETTINGS_ICON_PATHS,
+  LIVE2D_SETTINGS_ICON_PATH,
   LIVE2D_SIZE_DEFAULT,
   LIVE2D_SIZE_MAX,
   LIVE2D_SIZE_MIN,
@@ -145,7 +145,8 @@ export function Live2DCompanion() {
   const [settingsAnchor, setSettingsAnchor] = useState({ x: 12, y: 12 });
   const [status, setStatus] = useState<CompanionStatus>("idle");
   const [bubble, setBubble] = useState<string | null>(null);
-  const [iconStep, setIconStep] = useState(0);
+  const [iconFailed, setIconFailed] = useState(false);
+  const iconRef = useRef<HTMLImageElement>(null);
 
   const showBubble = useCallback((text: string, duration = 6200) => {
     if (bubbleTimerRef.current) window.clearTimeout(bubbleTimerRef.current);
@@ -171,6 +172,15 @@ export function Live2DCompanion() {
 
   const closeSettings = useCallback(() => {
     setSettingsOpen(false);
+  }, []);
+
+  const popSettingsIcon = useCallback(() => {
+    const icon = iconRef.current;
+    if (!icon) return;
+    icon.classList.remove(styles.iconPop);
+    // 强制 reflow，确保连续触发时动画能重新播放。
+    void icon.offsetWidth;
+    icon.classList.add(styles.iconPop);
   }, []);
 
   const persistPosition = useCallback((value: StoredPosition) => {
@@ -817,27 +827,37 @@ export function Live2DCompanion() {
             <button
               ref={gearRef}
               type="button"
-              className={`appearance-trigger ${styles.settingsButton}`}
+              className={`appearance-trigger ${styles.settingsButton}${settingsOpen ? ` ${styles.settingsActive}` : ""}`}
               aria-label="希罗设置"
               aria-expanded={settingsOpen}
-              title="希罗设置"
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse") popSettingsIcon();
+              }}
+              onPointerDown={popSettingsIcon}
               onClick={toggleSettingsFromGear}
             >
-              {iconStep < LIVE2D_SETTINGS_ICON_PATHS.length ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  className={styles.settingsIcon}
-                  src={LIVE2D_SETTINGS_ICON_PATHS[iconStep]}
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  onError={() => setIconStep((step) => step + 1)}
-                />
-              ) : (
+              {iconFailed ? (
                 <span className={styles.settingsIconFallback} aria-hidden="true">
                   希
                 </span>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  ref={iconRef}
+                  className={styles.settingsIcon}
+                  src={LIVE2D_SETTINGS_ICON_PATH}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  onError={() => setIconFailed(true)}
+                  onAnimationEnd={(event) =>
+                    event.currentTarget.classList.remove(styles.iconPop)
+                  }
+                />
               )}
+              <span className={styles.settingsTip} aria-hidden="true">
+                希罗设置
+              </span>
             </button>
           </div>
         </div>

@@ -10,7 +10,7 @@ public/live2d/
 │  ├─ live2dcubismcore.min.js   # Live2D Cubism 5 Core（官方原文件）
 │  └─ NOTICE.txt
 ├─ ui/
-│  └─ hiro-settings.webp        # 设置按钮图标（可选，缺失时显示「希」）
+│  └─ hiro-settings-02-tiny.png # 设置按钮图标（128×128 透明 PNG）
 └─ hiro/
    ├─ hiro-4096.model3.json     # 默认模型，引用 4096 WebP
    ├─ hiro.model3.json          # 8192 原图模型，仅作备份，代码不再引用
@@ -140,7 +140,9 @@ internalModel.idManager.getId("Param85")
 
 - **未开启鼠标穿透时**，在人物上右键打开设置面板；
 - 人物左侧的设置按钮也可以打开（手机可用）；
-- 设置按钮优先使用 `public/live2d/ui/hiro-settings.webp`，其次 `.ico`，都缺失时显示「希」字占位；
+- 设置按钮优先使用 `public/live2d/ui/hiro-settings-02-tiny.png`（128×128 透明 PNG），文件缺失时显示「希」字占位；
+- 悬停或键盘聚焦时按钮上方显示「希罗设置」提示，图标弹一下；按下时再弹一下；
+- 设置面板打开时按钮高亮，关闭后恢复；
 - 面板样式复用「外观设置」的 `appearance-*` 全局样式，跟随浅色/深色模式；
 - 面板内容：
   - 显示 / 隐藏人物；
@@ -257,6 +259,6 @@ Cache-Control: public, max-age=604800
 | 表情没反应 | `model3.json` 缺 `Expressions` | 用 `scripts/prepare-live2d.py` 重新生成 |
 | 中键拖拽触发自动滚动 | 没阻止中键默认行为 | 确认 canvas 上有 `mousedown` / `auxclick` 的 `preventDefault` |
 | 穿透后无法关闭 | 面板被画布盖住 | 面板在画布外，检查 `.controls` 与 `.appearance-panel` 的层级 |
-| 设置图标不显示 | 没有放入图标文件 | 放入 `public/live2d/ui/hiro-settings.webp`（或 `.ico`），否则显示「希」字占位 |
+| 设置图标不显示 | 没有放入图标文件 | 放入 `public/live2d/ui/hiro-settings-02-tiny.png`（128×128 透明 PNG），否则显示「希」字占位 |
 | 设置面板不跟随明暗 | 没有复用 `appearance-*` 样式 | 确认面板类名包含 `appearance-panel`，且全局 CSS 已加载 |
 | 更新模型后仍是旧图 | 7 天缓存 | 换目录版本或改文件名 |
