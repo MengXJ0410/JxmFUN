@@ -76,12 +76,19 @@ function readNetwork(text) {
   let tx = 0;
   for (const line of text.split("\n")) {
     const match = line.match(/^\s*([^:]+):\s*(.+)$/);
-    if (!match || match[1].trim() === "lo") continue;
+    if (!match) continue;
+    const name = match[1].trim();
+    if (/^(lo|docker|veth|br-|tun|virbr)/i.test(name)) continue;
     const fields = match[2].trim().split(/\s+/).map((value) => Number(value));
     rx += fields[0] || 0;
     tx += fields[8] || 0;
   }
   return { rx, tx };
+}
+
+async function readHostNetwork() {
+  const hostNetwork = await readText(join(HOST_PROC, "1", "net", "dev"));
+  return hostNetwork || readText(join(HOST_PROC, "net", "dev"));
 }
 
 function networkRates(text) {
@@ -152,7 +159,7 @@ async function collectDisk() {
 }
 
 async function collectHost() {
-  const [stat, meminfo, loadavg, uptime, hostname, hostRootHostname, version, cpuinfo, thermal, disk] = await Promise.all([
+  const [stat, meminfo, loadavg, uptime, hostname, hostRootHostname, version, cpuinfo, thermal, disk, networkText] = await Promise.all([
     readText(join(HOST_PROC, "stat")),
     readText(join(HOST_PROC, "meminfo")),
     readText(join(HOST_PROC, "loadavg")),
@@ -163,6 +170,7 @@ async function collectHost() {
     readText(join(HOST_PROC, "cpuinfo")),
     collectTemperature(),
     collectDisk(),
+    readHostNetwork(),
   ]);
 
   const memory = parseMeminfo(meminfo);
@@ -175,7 +183,7 @@ async function collectHost() {
   const load = loadavg.trim().split(/\s+/).slice(0, 3).map((value) => number(value));
   const model = cpuinfo.match(/model name\s*:\s*(.+)/i)?.[1]?.trim() || "Unknown CPU";
   const uptimeSec = number(uptime.trim().split(/\s+/)[0]);
-  const network = networkRates(await readText(join(HOST_PROC, "net", "dev")));
+  const network = networkRates(networkText);
 
   return {
     hostname: hostRootHostname.trim() || hostname.trim() || os.hostname(),
@@ -343,7 +351,7 @@ async function collect() {
 }
 
 previousCpu = readCpuTimes(await readText(join(HOST_PROC, "stat")));
-previousNetwork = readNetwork(await readText(join(HOST_PROC, "net", "dev")));
+previousNetwork = readNetwork(await readHostNetwork());
 previousNetworkAt = Date.now();
 await new Promise((resolve) => setTimeout(resolve, 300));
 await collect();
