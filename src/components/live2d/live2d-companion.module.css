@@ -25,6 +25,11 @@
   pointer-events: none;
 }
 
+/* 人物隐藏时保留模型实例，只做视觉隐藏并暂停渲染 */
+.stageHidden {
+  visibility: hidden;
+}
+
 .bubble {
   position: absolute;
   right: 6%;
@@ -169,6 +174,22 @@
   animation: settings-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* 未唤醒：图标变暗，悬停时稍微提亮 */
+.settingsDormant {
+  filter: brightness(0.45) saturate(0.65);
+  transition: filter 0.2s ease;
+}
+
+@media (hover: hover) {
+  .settingsButton:hover .settingsDormant {
+    filter: brightness(0.68) saturate(0.8);
+  }
+}
+
+.settingsButton:focus-visible .settingsDormant {
+  filter: brightness(0.68) saturate(0.8);
+}
+
 .settingsTip {
   position: absolute;
   right: 0;
@@ -188,6 +209,17 @@
   pointer-events: none;
 }
 
+/* 「召唤希罗」：亮红 + 黑色描边，贴合人物黑红配色 */
+.settingsTipSummon {
+  color: #ff5a5a;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 0 4px rgba(0, 0, 0, 0.85);
+}
+
 @media (hover: hover) {
   .settingsButton:hover .settingsTip {
     opacity: 1;
@@ -204,41 +236,6 @@
   filter: drop-shadow(
     0 0 5px color-mix(in srgb, var(--accent) 90%, transparent)
   );
-}
-
-.showButton {
-  position: fixed;
-  right: 18px;
-  bottom: 16px;
-  z-index: 45;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 46px;
-  height: 46px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.18));
-  border-radius: 999px;
-  background: rgba(7, 14, 26, 0.8);
-  color: #eef4ff;
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-}
-
-.showButton:hover {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, rgba(7, 14, 26, 0.84));
-  transform: translateY(-1px);
-}
-
-.showButton:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
 }
 
 html[data-color-mode="light"] .bubble {
@@ -276,16 +273,6 @@ html[data-color-mode="light"] .controls .settingsButton.settingsActive .settings
   filter: drop-shadow(
     0 0 5px color-mix(in srgb, var(--accent) 75%, transparent)
   );
-}
-
-html[data-color-mode="light"] .showButton {
-  border-color: color-mix(in srgb, var(--accent) 45%, rgba(38, 76, 110, 0.18));
-  background: rgba(255, 255, 255, 0.88);
-  color: #172b42;
-}
-
-html[data-color-mode="light"] .showButton:hover {
-  background: color-mix(in srgb, var(--accent) 12%, white);
 }
 
 @media (max-width: 760px) {
@@ -328,14 +315,6 @@ html[data-color-mode="light"] .showButton:hover {
     bottom: calc(100% + 8px);
     max-width: 78%;
     font-size: 0.76rem;
-  }
-
-  .showButton {
-    right: 12px;
-    bottom: 12px;
-    min-width: 42px;
-    height: 42px;
-    font-size: 0.72rem;
   }
 }
 
@@ -405,10 +384,6 @@ html[data-color-mode="light"] .showButton:hover {
   }
 
   .settingsTip {
-    transition: none;
-  }
-
-  .showButton {
     transition: none;
   }
 }

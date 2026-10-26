@@ -4,6 +4,7 @@ export const LIVE2D_CORE_PATH = "/live2d/core/live2dcubismcore.min.js";
 
 // 设置按钮图标（128×128，透明 PNG）；文件缺失时显示「希」字占位。
 export const LIVE2D_SETTINGS_ICON_PATH = "/live2d/ui/hiro-settings-02-tiny.png";
+// "1" = 已召唤并显示，"0" = 已召唤但隐藏；不存在 = 新访客，默认不加载
 export const LIVE2D_STORAGE_KEY = "jxmfun-live2d-enabled";
 export const LIVE2D_SESSION_KEY = "jxmfun-live2d-greeted";
 export const LIVE2D_SCALE_STORAGE_KEY = "jxmfun-live2d-scale";

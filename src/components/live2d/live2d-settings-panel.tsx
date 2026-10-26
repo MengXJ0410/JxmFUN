@@ -6,12 +6,12 @@ import { LIVE2D_SIZE_MAX, LIVE2D_SIZE_MIN } from "@/content/live2d";
 type Live2DSettingsPanelProps = {
   anchor: { x: number; y: number };
   viewport: { width: number; height: number };
-  enabled: boolean;
+  visible: boolean;
   passthrough: boolean;
   scale: number;
   ignoreRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
-  onToggleEnabled: () => void;
+  onToggleVisible: () => void;
   onTogglePassthrough: () => void;
   onScaleChange: (value: number) => void;
 };
@@ -19,12 +19,12 @@ type Live2DSettingsPanelProps = {
 export function Live2DSettingsPanel({
   anchor,
   viewport,
-  enabled,
+  visible,
   passthrough,
   scale,
   ignoreRef,
   onClose,
-  onToggleEnabled,
+  onToggleVisible,
   onTogglePassthrough,
   onScaleChange,
 }: Live2DSettingsPanelProps) {
@@ -83,11 +83,11 @@ export function Live2DSettingsPanel({
       </div>
       <button
         type="button"
-        className={`appearance-choice appearance-system${enabled ? " is-on" : ""}`}
-        aria-pressed={enabled}
-        onClick={onToggleEnabled}
+        className={`appearance-choice appearance-system${visible ? " is-on" : ""}`}
+        aria-pressed={visible}
+        onClick={onToggleVisible}
       >
-        {enabled ? "隐藏人物" : "显示人物"}
+        {visible ? "隐藏人物" : "显示人物"}
       </button>
       <button
         type="button"

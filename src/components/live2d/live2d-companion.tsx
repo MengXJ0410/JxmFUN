@@ -136,7 +136,10 @@ export function Live2DCompanion() {
   const bubbleTimerRef = useRef<number | null>(null);
 
   const [initialized, setInitialized] = useState(false);
-  const [enabled, setEnabled] = useState(false);
+  const [summoned, setSummoned] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [passthrough, setPassthrough] = useState(false);
   const [scale, setScale] = useState(LIVE2D_SIZE_DEFAULT);
   const [position, setPosition] = useState<StoredPosition | null>(null);
@@ -147,6 +150,7 @@ export function Live2DCompanion() {
   const [bubble, setBubble] = useState<string | null>(null);
   const [iconFailed, setIconFailed] = useState(false);
   const iconRef = useRef<HTMLImageElement>(null);
+  const appRef = useRef<Application | null>(null);
 
   const showBubble = useCallback((text: string, duration = 6200) => {
     if (bubbleTimerRef.current) window.clearTimeout(bubbleTimerRef.current);
@@ -191,8 +195,7 @@ export function Live2DCompanion() {
     }
   }, []);
 
-  const persistEnabled = useCallback((next: boolean) => {
-    setEnabled(next);
+  const persistVisible = useCallback((next: boolean) => {
     try {
       window.localStorage.setItem(LIVE2D_STORAGE_KEY, next ? "1" : "0");
     } catch {
@@ -200,21 +203,27 @@ export function Live2DCompanion() {
     }
   }, []);
 
-  const toggleEnabled = useCallback(() => {
-    setEnabled((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(LIVE2D_STORAGE_KEY, next ? "1" : "0");
-      } catch {
-        // Ignore storage failures.
-      }
-      return next;
-    });
-  }, []);
+  const summonCompanion = useCallback(() => {
+    setSummoned(true);
+    setVisible(true);
+    setShouldLoad(true);
+    setStatus("idle");
+    setLoadAttempt((attempt) => attempt + 1);
+    persistVisible(true);
+  }, [persistVisible]);
 
-  const showCompanion = useCallback(() => {
-    persistEnabled(true);
-  }, [persistEnabled]);
+  const toggleVisible = useCallback(() => {
+    const next = !visible;
+    setVisible(next);
+    persistVisible(next);
+    if (!next) return;
+    setSummoned(true);
+    // 已加载或正在加载时只切换显示，不打断进行中的加载。
+    if (status === "ready" || status === "loading") return;
+    setShouldLoad(true);
+    setStatus("idle");
+    setLoadAttempt((attempt) => attempt + 1);
+  }, [persistVisible, status, visible]);
 
   const togglePassthrough = useCallback(() => {
     setPassthrough((current) => {
@@ -240,11 +249,15 @@ export function Live2DCompanion() {
 
   useEffect(() => {
     const apply = () => {
-      const mobile = window.matchMedia("(max-width: 760px)").matches;
       const storedEnabled = window.localStorage.getItem(LIVE2D_STORAGE_KEY);
       const storedPassthrough = window.localStorage.getItem(LIVE2D_PASSTHROUGH_STORAGE_KEY);
+      const hasStoredPreference = storedEnabled === "1" || storedEnabled === "0";
+      const storedVisible = storedEnabled === "1";
       setViewport({ width: window.innerWidth, height: window.innerHeight });
-      setEnabled(storedEnabled === "1" ? true : storedEnabled === "0" ? false : !mobile);
+      // 新访客默认不加载；老访客保留原有显示/隐藏偏好。
+      setSummoned(hasStoredPreference);
+      setVisible(storedVisible);
+      setShouldLoad(storedVisible);
       setPassthrough(storedPassthrough === "1");
       setScale(readStoredScale());
       setPosition(readStoredPosition());
@@ -292,7 +305,7 @@ export function Live2DCompanion() {
   }, [position, scale, viewport]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!shouldLoad) return;
     const mount = mountRef.current;
     if (!mount) return;
 
@@ -467,6 +480,7 @@ export function Live2DCompanion() {
 
         const pixiApp = new PIXI.Application();
         app = pixiApp;
+        appRef.current = pixiApp;
         await pixiApp.init({
           resizeTo: mount,
           backgroundAlpha: 0,
@@ -731,7 +745,25 @@ export function Live2DCompanion() {
         }, 900);
       } catch (error) {
         console.error("[live2d] failed to start", error);
-        if (!cancelled) setStatus("error");
+        if (!cancelled) {
+          if (model) {
+            safeDestroy(() => model?.destroy());
+            model = null;
+          }
+          if (app) {
+            safeDestroy(() => app?.destroy(true, { children: true }));
+            app = null;
+          }
+          appRef.current = null;
+          // 失败后清掉偏好，刷新时回到未唤醒，避免反复自动加载慢资源。
+          setStatus("error");
+          setVisible(false);
+          try {
+            window.localStorage.removeItem(LIVE2D_STORAGE_KEY);
+          } catch {
+            // Ignore storage failures.
+          }
+        }
       }
     };
 
@@ -761,10 +793,21 @@ export function Live2DCompanion() {
         safeDestroy(() => app?.destroy(true, { children: true }));
         app = null;
       }
+      appRef.current = null;
       setStatus("idle");
       clearBubble();
     };
-  }, [enabled, showBubble, clearBubble, persistPosition]);
+  }, [shouldLoad, loadAttempt, showBubble, clearBubble, persistPosition]);
+
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    if (visible) {
+      app.ticker.start();
+    } else {
+      app.ticker.stop();
+    }
+  }, [visible, status]);
 
   useEffect(() => {
     return () => {
@@ -788,9 +831,37 @@ export function Live2DCompanion() {
     openSettingsAt(Math.max(12, rect.left - 316), Math.max(12, rect.top - 8));
   };
 
+  const iconState =
+    !summoned || status === "error"
+      ? "sleeping"
+      : shouldLoad && visible && status !== "ready"
+        ? "loading"
+        : "awake";
+  const iconLabel =
+    iconState === "sleeping"
+      ? "召唤希罗"
+      : iconState === "loading"
+        ? "希罗回溯中"
+        : "希罗设置";
+  const iconTip =
+    iconState === "sleeping"
+      ? "召唤希罗"
+      : iconState === "loading"
+        ? "希罗回溯中……"
+        : "希罗设置";
+
+  const onSettingsIconClick = () => {
+    if (iconState === "loading") return;
+    if (iconState === "sleeping") {
+      summonCompanion();
+      return;
+    }
+    toggleSettingsFromGear();
+  };
+
   return (
     <>
-      {initialized && enabled && layout ? (
+      {initialized && layout ? (
         <div
           ref={wrapperRef}
           className={styles.companion}
@@ -801,23 +872,23 @@ export function Live2DCompanion() {
             height: layout.height,
           }}
         >
-          {bubble ? (
+          {visible && bubble ? (
             <p className={styles.bubble} role="status" aria-live="polite">
               {bubble}
             </p>
           ) : null}
           <div
             ref={mountRef}
-            className={`${styles.stage}${passthrough ? ` ${styles.stagePassthrough}` : ""}`}
+            className={`${styles.stage}${passthrough ? ` ${styles.stagePassthrough}` : ""}${visible ? "" : ` ${styles.stageHidden}`}`}
             onContextMenu={onStageContextMenu}
           >
-            {status !== "ready" && status !== "error" ? (
+            {visible && status !== "ready" && status !== "error" ? (
               <div className={styles.loadingCard} role="status" aria-live="polite">
                 <span className={styles.loadingTitle}>希罗回溯中……</span>
                 <span className={styles.loadingBar} aria-hidden="true" />
               </div>
             ) : null}
-            {status === "error" ? (
+            {visible && status === "error" ? (
               <div className={styles.errorCard} role="alert">
                 希罗加载失败
               </div>
@@ -828,23 +899,26 @@ export function Live2DCompanion() {
               ref={gearRef}
               type="button"
               className={`appearance-trigger ${styles.settingsButton}${settingsOpen ? ` ${styles.settingsActive}` : ""}`}
-              aria-label="希罗设置"
-              aria-expanded={settingsOpen}
+              aria-label={iconLabel}
+              aria-expanded={iconState === "awake" ? settingsOpen : false}
               onPointerEnter={(event) => {
                 if (event.pointerType === "mouse") popSettingsIcon();
               }}
               onPointerDown={popSettingsIcon}
-              onClick={toggleSettingsFromGear}
+              onClick={onSettingsIconClick}
             >
               {iconFailed ? (
-                <span className={styles.settingsIconFallback} aria-hidden="true">
+                <span
+                  className={`${styles.settingsIconFallback}${iconState === "awake" ? "" : ` ${styles.settingsDormant}`}`}
+                  aria-hidden="true"
+                >
                   希
                 </span>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   ref={iconRef}
-                  className={styles.settingsIcon}
+                  className={`${styles.settingsIcon}${iconState === "awake" ? "" : ` ${styles.settingsDormant}`}`}
                   src={LIVE2D_SETTINGS_ICON_PATH}
                   alt=""
                   aria-hidden="true"
@@ -855,33 +929,26 @@ export function Live2DCompanion() {
                   }
                 />
               )}
-              <span className={styles.settingsTip} aria-hidden="true">
-                希罗设置
+              <span
+                className={`${styles.settingsTip}${iconState === "sleeping" ? ` ${styles.settingsTipSummon}` : ""}`}
+                aria-hidden="true"
+              >
+                {iconTip}
               </span>
             </button>
           </div>
         </div>
       ) : null}
-      {initialized && !enabled ? (
-        <button
-          type="button"
-          className={styles.showButton}
-          onClick={showCompanion}
-          aria-label="显示希罗"
-        >
-          希罗
-        </button>
-      ) : null}
       {settingsOpen ? (
         <Live2DSettingsPanel
           anchor={settingsAnchor}
           viewport={viewport}
-          enabled={enabled}
+          visible={visible}
           passthrough={passthrough}
           scale={scale}
           ignoreRef={gearRef}
           onClose={closeSettings}
-          onToggleEnabled={toggleEnabled}
+          onToggleVisible={toggleVisible}
           onTogglePassthrough={togglePassthrough}
           onScaleChange={changeScale}
         />
