@@ -1,5 +1,6 @@
 ﻿import type {
   BackgroundEntry,
+  BackgroundFrame,
   BackgroundPlatform,
   BackgroundTheme,
 } from "@/lib/home/backgrounds";
@@ -21,10 +22,11 @@ export type BackgroundState = {
 };
 
 export type BackgroundMutation = {
-  action: "update" | "remove" | "sync";
+  action: "update" | "remove" | "delete" | "sync";
   file?: string;
   theme?: BackgroundTheme;
   platform?: BackgroundPlatform;
+  frame?: BackgroundFrame;
   prune?: boolean;
 };
 

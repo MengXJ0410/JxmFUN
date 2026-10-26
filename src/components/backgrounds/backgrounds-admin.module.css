@@ -126,28 +126,69 @@
   line-height: 1.6;
 }
 
+.itemRow {
+  position: relative;
+  display: flex;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+.itemRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.itemRow.itemActive {
+  border-color: rgba(39, 219, 228, 0.42);
+  background: rgba(39, 219, 228, 0.09);
+}
+
 .item {
   display: grid;
   width: 100%;
+  min-width: 0;
   grid-template-columns: 58px minmax(0, 1fr);
   gap: 0.62rem;
   align-items: center;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 10px;
-  padding: 0.42rem;
+  padding: 0.42rem 2.3rem 0.42rem 0.42rem;
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.item:hover {
-  background: rgba(255, 255, 255, 0.04);
+.itemDelete {
+  position: absolute;
+  top: 50%;
+  right: 0.42rem;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 1px solid rgba(255, 107, 125, 0.3);
+  border-radius: 7px;
+  background: rgba(255, 107, 125, 0.07);
+  color: var(--danger);
+  opacity: 0.6;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
-.itemActive {
-  border-color: rgba(39, 219, 228, 0.42);
-  background: rgba(39, 219, 228, 0.09);
+.itemRow:hover .itemDelete,
+.itemDelete:focus-visible {
+  opacity: 1;
+}
+
+.itemDelete:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: rgba(255, 107, 125, 0.16);
+}
+
+.itemDelete:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
 }
 
 .thumb {
@@ -221,8 +262,12 @@
 }
 
 .previewImage {
-  object-fit: contain;
-  padding: clamp(0.5rem, 2vw, 1.2rem);
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  transform: scale(var(--preview-scale, 1.12));
+  transition: transform 0.2s ease;
 }
 
 .previewEmpty {
@@ -313,6 +358,17 @@
   color: var(--pink);
 }
 
+.secondary {
+  border: 1px solid rgba(180, 226, 238, 0.24);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
 .danger {
   border: 1px solid rgba(255, 107, 125, 0.38);
   background: transparent;
@@ -388,6 +444,127 @@
   opacity: 0.45;
 }
 
+.cropBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(6px);
+}
+
+.cropDialog {
+  display: grid;
+  width: min(760px, 100%);
+  max-height: calc(100svh - 2rem);
+  gap: 0.9rem;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52);
+}
+
+.cropHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cropHeader strong {
+  font-size: 0.92rem;
+}
+
+.cropHeader span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cropHeader button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.cropPreview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #030a0e;
+}
+
+.cropImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  transform: scale(var(--crop-scale, 1.12));
+  transition: transform 0.12s ease;
+}
+
+.cropControls {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.cropField {
+  display: grid;
+  gap: 0.32rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.cropField input {
+  width: 100%;
+  accent-color: var(--cyan);
+}
+
+.cropActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.cropActions button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 0.9rem;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.cropActions .primary {
+  border-color: rgba(39, 219, 228, 0.5);
+  background: rgba(39, 219, 228, 0.12);
+  color: var(--cyan);
+}
+
+.cropActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 @media (max-width: 780px) {
   .page {
     padding: 0.5rem;
@@ -422,6 +599,23 @@
 
   .actions button {
     min-width: 0;
+  }
+
+  .itemDelete {
+    opacity: 1;
+  }
+
+  .cropDialog {
+    padding: 0.8rem;
+  }
+
+  .cropActions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .cropActions button {
+    width: 100%;
   }
 
   .status {

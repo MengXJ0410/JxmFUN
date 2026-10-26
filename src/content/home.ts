@@ -21,7 +21,7 @@ export const HOME_COPY = {
   brand: "JXM · PERSONAL SPACE",
   heroTitle: "喵喵喵喵",
   heroSubtitle: "让每一次对话，都成为新的灵感入口。",
-  heroCta: "了解这个项目",
+  heroCta: "让我访问！",
   heroExplore: "向下探索",
   returnToGate: "返回传送门",
   authorKicker: "ABOUT THE CREATOR",

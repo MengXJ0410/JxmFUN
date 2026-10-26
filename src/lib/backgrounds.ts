@@ -3,6 +3,7 @@ import { basename, join } from "node:path";
 import {
   isBackgroundPlatform,
   isBackgroundTheme,
+  normalizeBackgroundFrame,
   type BackgroundEntry,
 } from "@/lib/home/backgrounds";
 
@@ -47,7 +48,7 @@ export function getHomeBackgrounds(): BackgroundEntry[] {
       warn("Skipped a non-object background entry");
       continue;
     }
-    const entry = raw as { file?: unknown; theme?: unknown; platform?: unknown };
+    const entry = raw as { file?: unknown; theme?: unknown; platform?: unknown; frame?: unknown };
     const file = entry.file;
     if (typeof file !== "string" || file.length === 0 || file !== basename(file) || !IMAGE_EXTENSION.test(file)) {
       warn(`Skipped invalid file entry: ${String(file)}`);
@@ -70,6 +71,7 @@ export function getHomeBackgrounds(): BackgroundEntry[] {
       src: `/images/backgrounds/${encodeURIComponent(file)}`,
       theme: entry.theme,
       platform: entry.platform,
+      frame: normalizeBackgroundFrame(entry.frame),
     });
   }
 

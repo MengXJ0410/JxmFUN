@@ -1,6 +1,6 @@
-﻿import { type CSSProperties, type RefObject } from "react";
+﻿import Link from "next/link";
+import { type CSSProperties, type RefObject } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
-import { AppearanceControl } from "@/components/home/appearance-control";
 import { HOME_COPY } from "@/content/home";
 import { responsiveBubbleSize, type BubbleVisual } from "@/lib/home/bubbles";
 import type { BackgroundEntry, BackgroundEnvironment } from "@/lib/home/backgrounds";
@@ -29,7 +29,11 @@ export function HeroSection({ backgrounds, currentFile, previousFile, environmen
             >
               <div
                 className="home-background-drift"
-                style={{ backgroundImage: `url("${entry.src}")` }}
+                style={{
+                  backgroundImage: `url("${entry.src}")`,
+                  backgroundPosition: `${entry.frame.x}% ${entry.frame.y}%`,
+                  "--bg-scale": String(1.12 * entry.frame.zoom),
+                } as CSSProperties}
               />
             </div>
           ))}
@@ -53,13 +57,12 @@ export function HeroSection({ backgrounds, currentFile, previousFile, environmen
       </div>
       <header className="home-nav" aria-label="个人主页">
         <span>{HOME_COPY.brand}</span>
-        <AppearanceControl />
       </header>
       <div className="home-stage">
         <div className="home-stage-content">
-          <h1>{HOME_COPY.heroTitle}</h1>
-          <p>{HOME_COPY.heroSubtitle}</p>
-          <button className="home-launch" type="button" onClick={onExplore}>{HOME_COPY.heroCta}</button>
+          <h1 className="display-title">{HOME_COPY.heroTitle}</h1>
+          <p className="display-tagline">{HOME_COPY.heroSubtitle}</p>
+          <Link className="home-launch" href="/home">{HOME_COPY.heroCta}</Link>
         </div>
       </div>
       <button className="home-return-gate" type="button" onClick={onReturnToGate} disabled={returning}>

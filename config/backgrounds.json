@@ -19,7 +19,12 @@
     {
       "file": "bg_004.webp",
       "theme": "day",
-      "platform": "computer"
+      "platform": "computer",
+      "frame": {
+        "zoom": 1.12,
+        "x": 50,
+        "y": 50
+      }
     },
     {
       "file": "bg_005.webp",
@@ -33,6 +38,21 @@
     },
     {
       "file": "bg_999.webp",
+      "theme": "both",
+      "platform": "both"
+    },
+    {
+      "file": "bg_007.webp",
+      "theme": "both",
+      "platform": "computer"
+    },
+    {
+      "file": "bg_008.webp",
+      "theme": "both",
+      "platform": "both"
+    },
+    {
+      "file": "bg_009.webp",
       "theme": "both",
       "platform": "both"
     }

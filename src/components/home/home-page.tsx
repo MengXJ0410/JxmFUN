@@ -10,6 +10,7 @@ import { useBackgroundEnvironment } from "@/lib/home/use-background-environment"
 import { useBackgroundRotation } from "@/lib/home/use-background-rotation";
 import { HOME_PAGE_COUNT, getHomePageIndexFromScroll, nextHomePageIndex } from "@/lib/home/sections";
 import { AboutSection } from "@/components/home/about-section";
+import { AppearanceControl } from "@/components/home/appearance-control";
 import { HeroSection } from "@/components/home/hero-section";
 import { MoreSection } from "@/components/home/more-section";
 import { PageDots } from "@/components/home/page-dots";
@@ -221,8 +222,8 @@ export function HomePage({ backgrounds }: HomePageProps) {
     const node = event.currentTarget;
     const x = (event.clientX - rect.left) / Math.max(1, rect.width) - 0.5;
     const y = (event.clientY - rect.top) / Math.max(1, rect.height) - 0.5;
-    node.style.setProperty("--bg-shift-x", `${(x * -4.4).toFixed(2)}%`);
-    node.style.setProperty("--bg-shift-y", `${(y * -2.8).toFixed(2)}%`);
+    node.style.setProperty("--bg-shift-x", `${(x * -3.2).toFixed(2)}%`);
+    node.style.setProperty("--bg-shift-y", `${(y * -2).toFixed(2)}%`);
   };
   const pageStyle = { "--accent": accent } as CSSProperties;
 
@@ -253,6 +254,7 @@ export function HomePage({ backgrounds }: HomePageProps) {
       <AboutSection onExplore={() => scrollToPage(2)} />
       <MoreSection onHome={() => scrollToPage(0)} />
       <PageDots activePage={activePage} onSelect={scrollToPage} />
+      <AppearanceControl />
     </main>
   );
 }

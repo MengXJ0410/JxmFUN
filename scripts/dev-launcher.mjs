@@ -10,6 +10,13 @@ const HOST = "127.0.0.1";
 const DEFAULT_PORT = 4180;
 const DEV_PORT = 3100;
 const DEV_URL = `http://127.0.0.1:${DEV_PORT}`;
+const PUBLIC_URL = "https://mxj.jxmfun.xyz/";
+const SYNC_EXCLUDES = [
+  "public/hirolive2d",
+  "public/hirolive2d/**",
+  "docs/workbuddy2api-server.md",
+];
+const DEPLOY_COMMAND = "cd /home/mxjserver/website && git fetch server && git reset --hard server/main && docker compose --env-file .env -f deploy/compose.yml up -d --build && sleep 2 && git log -1 --oneline && curl -fsS -o /dev/null http://127.0.0.1:3000/";
 const isWindows = process.platform === "win32";
 const args = process.argv.slice(2);
 const portFlag = args.indexOf("--port");
@@ -155,6 +162,85 @@ function startChain(kind, commands) {
   };
 
   next();
+  return job;
+}
+
+function finishJob(job, code) {
+  if (job.done) return;
+  job.done = true;
+  job.code = code;
+  job.lines.push(code === 0 ? "[launcher] 一键同步完成" : `[launcher] 一键同步失败，退出码 ${code}`);
+}
+
+function runJobStep(job, tool, toolArgs) {
+  return new Promise((resolve) => {
+    job.lines.push(`[launcher] $ ${tool} ${toolArgs.join(" ")}`);
+    const child = spawnTool(tool, toolArgs, {
+      cwd: ROOT,
+      shell: false,
+      windowsHide: true,
+      env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" },
+    });
+    job.child = child;
+    child.stdout.on("data", (chunk) => pushLines(job, chunk));
+    child.stderr.on("data", (chunk) => pushLines(job, chunk));
+    child.on("error", (error) => {
+      job.lines.push(`[launcher] ${error.message}`);
+      resolve(-1);
+    });
+    child.on("close", (code) => resolve(code));
+  });
+}
+
+function startOneClickSync() {
+  const job = createJob("sync-all");
+  void (async () => {
+    try {
+      const restore = await runJobStep(job, "git", ["restore", "next-env.d.ts"]);
+      if (restore !== 0) job.lines.push("[launcher] 提示：next-env.d.ts 恢复失败，继续执行");
+
+      const addArgs = [
+        "add",
+        "-A",
+        "--",
+        ".",
+        ...SYNC_EXCLUDES.map((path) => `:(exclude)${path}`),
+      ];
+      const add = await runJobStep(job, "git", addArgs);
+      if (add !== 0) throw new Error("暂存本地改动失败");
+
+      const staged = await runCommand("git", ["diff", "--cached", "--quiet"]);
+      if (staged.code === 1) {
+        const message = `chore: sync local site ${new Date().toISOString()}`;
+        const commit = await runJobStep(job, "git", ["commit", "-m", message]);
+        if (commit !== 0) throw new Error("创建同步提交失败");
+      } else if (staged.code !== 0) {
+        throw new Error("检查待提交内容失败");
+      } else {
+        job.lines.push("[launcher] 没有新的本地改动，跳过 commit");
+      }
+
+      for (const remote of ["origin", "server"]) {
+        const push = await runJobStep(job, "git", ["push", remote, "main"]);
+        if (push !== 0) throw new Error(`推送到 ${remote} 失败`);
+      }
+
+      const deploy = await runJobStep(job, "ssh", [
+        "-o", "BatchMode=yes",
+        "mxj",
+        DEPLOY_COMMAND,
+      ]);
+      if (deploy !== 0) throw new Error("服务器拉取、重建或健康检查失败");
+
+      await sleep(800);
+      job.lines.push(`[launcher] 已打开 ${PUBLIC_URL}`);
+      openBrowser(PUBLIC_URL);
+      finishJob(job, 0);
+    } catch (error) {
+      job.lines.push(`[launcher] ${error instanceof Error ? error.message : String(error)}`);
+      finishJob(job, 1);
+    }
+  })();
   return job;
 }
 
@@ -337,6 +423,15 @@ async function handle(request, response) {
       return sendJson(response, 200, { ok: true, stopped: stopDev() });
     }
 
+    if (body.action === "sync-all") {
+      const status = await gitStatus();
+      if (status.branch !== "main") {
+        return sendJson(response, 400, { error: `当前分支是 ${status.branch}，不是 main` });
+      }
+      const job = startOneClickSync();
+      return sendJson(response, 200, { ok: true, jobId: job.id });
+    }
+
     if (body.action === "push") {
       const status = await gitStatus();
       if (status.branch !== "main") {
@@ -353,7 +448,7 @@ async function handle(request, response) {
       const job = startJob("deploy", "ssh", [
         "-o", "BatchMode=yes",
         "mxj",
-        "cd /home/mxjserver/website && git fetch server && if [ -f config/backgrounds.json ]; then cp -f config/backgrounds.json /tmp/mxj-backgrounds.json; fi && git reset --hard server/main && if [ -f /tmp/mxj-backgrounds.json ]; then cp -f /tmp/mxj-backgrounds.json config/backgrounds.json; fi && docker compose --env-file .env -f deploy/compose.yml up -d --build",
+        DEPLOY_COMMAND,
       ]);
       return sendJson(response, 200, { ok: true, jobId: job.id });
     }

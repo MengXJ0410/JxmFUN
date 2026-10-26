@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  deleteBackgroundFile,
   getBackgroundState,
   removeBackgroundEntry,
   syncBackgroundConfig,
@@ -42,11 +43,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, ...result }, { headers: NO_STORE });
     }
     if (body.action === "update") {
-      const state = updateBackgroundEntry(body.file, { theme: body.theme, platform: body.platform });
+      const state = updateBackgroundEntry(body.file, { theme: body.theme, platform: body.platform, frame: body.frame });
       return NextResponse.json({ ok: true, state }, { headers: NO_STORE });
     }
     if (body.action === "remove") {
       const state = removeBackgroundEntry(body.file);
+      return NextResponse.json({ ok: true, state }, { headers: NO_STORE });
+    }
+    if (body.action === "delete") {
+      const state = deleteBackgroundFile(body.file);
       return NextResponse.json({ ok: true, state }, { headers: NO_STORE });
     }
     return NextResponse.json({ error: "Unknown action" }, { status: 400, headers: NO_STORE });

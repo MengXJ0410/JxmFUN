@@ -3,6 +3,7 @@ import { basename, join } from "node:path";
 import {
   isBackgroundPlatform,
   isBackgroundTheme,
+  normalizeBackgroundFrame,
   type BackgroundPlatform,
   type BackgroundTheme,
 } from "@/lib/home/backgrounds";
@@ -93,6 +94,7 @@ function toState(config: StoredConfig): BackgroundState {
     src: imageUrl(entry.file),
     theme: entry.theme,
     platform: entry.platform,
+    frame: normalizeBackgroundFrame(entry.frame),
     exists: available.has(entry.file),
   }));
   return {
@@ -106,7 +108,7 @@ export function getBackgroundState() {
   return toState(readConfig());
 }
 
-export function updateBackgroundEntry(file: unknown, values: { theme?: unknown; platform?: unknown }) {
+export function updateBackgroundEntry(file: unknown, values: { theme?: unknown; platform?: unknown; frame?: unknown }) {
   if (
     typeof file !== "string" ||
     file.length === 0 ||
@@ -127,6 +129,7 @@ export function updateBackgroundEntry(file: unknown, values: { theme?: unknown; 
   }
   if (values.theme !== undefined) entry.theme = values.theme as BackgroundTheme;
   if (values.platform !== undefined) entry.platform = values.platform as BackgroundPlatform;
+  if (values.frame !== undefined) entry.frame = normalizeBackgroundFrame(values.frame);
   writeConfig(config);
   return toState(config);
 }
@@ -138,6 +141,25 @@ export function removeBackgroundEntry(file: unknown) {
   config.backgrounds = config.backgrounds.filter((entry) => entry.file !== file);
   if (config.backgrounds.length === before) throw new Error("Background entry not found");
   writeConfig(config);
+  return toState(config);
+}
+
+export function deleteBackgroundFile(file: unknown) {
+  if (
+    typeof file !== "string" ||
+    file.length === 0 ||
+    file !== basename(file) ||
+    !IMAGE_FILE.test(file)
+  ) {
+    throw new Error("Invalid background file");
+  }
+
+  const config = readConfig();
+  config.backgrounds = config.backgrounds.filter((entry) => entry.file !== file);
+  writeConfig(config);
+
+  const fullPath = join(IMAGES_DIR, file);
+  if (existsSync(fullPath)) unlinkSync(fullPath);
   return toState(config);
 }
 

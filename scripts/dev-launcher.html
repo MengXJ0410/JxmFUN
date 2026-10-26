@@ -82,6 +82,7 @@
     .action strong { font-size: 0.8rem; font-weight: 650; }
     .action small { color: var(--muted); font-size: 0.66rem; line-height: 1.45; }
     .action.primary { border-color: rgba(40, 220, 228, 0.45); }
+    .action.sync { border-color: rgba(118, 226, 160, 0.5); background: rgba(118, 226, 160, 0.06); }
     .action.deploy { border-color: rgba(255, 121, 176, 0.35); }
 
     .status {
@@ -191,6 +192,10 @@
       </header>
 
       <div class="actions">
+        <button class="action sync" data-action="sync-all" type="button">
+          <strong>一键同步服务端</strong>
+          <small>自动提交本地改动 → 推送 → 服务器拉取重建 → 打开网页</small>
+        </button>
         <button class="action primary" data-action="dev" type="button">
           <strong>启动本地测试</strong>
           <small>重启 3100 端口开发服务器，并打开网页</small>
@@ -201,11 +206,11 @@
         </button>
         <button class="action" data-action="push" type="button">
           <strong>执行 git 推送</strong>
-          <small>推送当前 main 分支到 origin</small>
+          <small>只推送已提交内容；一键同步会自动提交</small>
         </button>
         <button class="action deploy" data-action="deploy" type="button">
           <strong>服务端拉取并重启</strong>
-          <small>SSH 到 mxj，git pull 后重建并重启容器</small>
+          <small>SSH 到 mxj，拉取 server/main 后重建并重启容器</small>
         </button>
       </div>
 
