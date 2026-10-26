@@ -10,5 +10,5 @@ export const metadata = {
 
 export default async function RealHomePage() {
   if (!(await isUnlocked())) redirect("/");
-  return <RealHomeShell />;
+  return <RealHomeShell active="home" />;
 }

@@ -3,9 +3,10 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 import { HOME_BUBBLE_TERMS } from "@/content/home";
-import { APPEARANCE_CHANGE_EVENT, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, defaultAppearance, deriveBubbleColor, parseAppearance, type AppearanceChangeDetail } from "@/lib/appearance";
+import { defaultAppearance, deriveBubbleColor } from "@/lib/appearance";
 import { advanceParticles, createBubbleVisuals, placeBubbleParticles, type BubbleParticle, type BubbleRect } from "@/lib/home/bubbles";
 import { filterBackgrounds, type BackgroundEntry } from "@/lib/home/backgrounds";
+import { useAppearancePreferences } from "@/lib/home/use-appearance";
 import { useBackgroundEnvironment } from "@/lib/home/use-background-environment";
 import { useBackgroundRotation } from "@/lib/home/use-background-rotation";
 import { HOME_PAGE_COUNT, getHomePageIndexFromScroll, nextHomePageIndex } from "@/lib/home/sections";
@@ -19,6 +20,7 @@ type HomePageProps = { backgrounds: BackgroundEntry[] };
 
 export function HomePage({ backgrounds }: HomePageProps) {
   const environment = useBackgroundEnvironment();
+  const appearance = useAppearancePreferences();
   const backgroundCandidates = filterBackgrounds(backgrounds, environment);
   const rotation = useBackgroundRotation(backgrounds, environment);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,8 +32,8 @@ export function HomePage({ backgrounds }: HomePageProps) {
   const [bubbles] = useState(() => createBubbleVisuals(HOME_BUBBLE_TERMS, () => 0.5));
   const [activePage, setActivePage] = useState(0);
   const [returning, setReturning] = useState(false);
-  const [accent, setAccent] = useState(() => typeof window === "undefined" ? DEFAULT_ACCENT : parseAppearance(localStorage.getItem(APPEARANCE_STORAGE_KEY)).accent);
-  const [bubbleColorRange, setBubbleColorRange] = useState(() => typeof window === "undefined" ? defaultAppearance.bubbleColorRange : parseAppearance(localStorage.getItem(APPEARANCE_STORAGE_KEY)).bubbleColorRange);
+  const accent = appearance.accent;
+  const bubbleColorRange = appearance.bubbleColorRange;
 
   const scrollToPage = useCallback((index: number) => {
     const root = scrollRef.current;
@@ -42,17 +44,8 @@ export function HomePage({ backgrounds }: HomePageProps) {
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem(APPEARANCE_STORAGE_KEY);
-    if (stored) activityRef.current = parseAppearance(stored).bubbleActivity;
-    const onAppearanceChange = (event: Event) => {
-      const detail = (event as CustomEvent<AppearanceChangeDetail>).detail;
-      setAccent(detail.accent);
-      setBubbleColorRange(detail.bubbleColorRange);
-      activityRef.current = detail.bubbleActivity;
-    };
-    window.addEventListener(APPEARANCE_CHANGE_EVENT, onAppearanceChange);
-    return () => window.removeEventListener(APPEARANCE_CHANGE_EVENT, onAppearanceChange);
-  }, []);
+    activityRef.current = appearance.bubbleActivity;
+  }, [appearance.bubbleActivity]);
 
   useEffect(() => {
     const root = scrollRef.current;

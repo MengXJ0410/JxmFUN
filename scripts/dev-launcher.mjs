@@ -16,7 +16,7 @@ const SYNC_EXCLUDES = [
   "public/hirolive2d/**",
   "docs/workbuddy2api-server.md",
 ];
-const DEPLOY_COMMAND = "cd /home/mxjserver/website && git fetch server && git reset --hard server/main && docker compose --env-file .env -f deploy/compose.yml up -d --build && sleep 2 && git log -1 --oneline && curl -fsS -o /dev/null http://127.0.0.1:3000/";
+const DEPLOY_COMMAND = "cd /home/mxjserver/website && git fetch server && git reset --hard server/main && docker compose --env-file .env -f deploy/compose.yml up -d --build && sleep 6 && docker exec mxjmonitor test -s /app/.runtime/monitor.json && git log -1 --oneline && curl -fsS -o /dev/null http://127.0.0.1:3000/";
 const isWindows = process.platform === "win32";
 const args = process.argv.slice(2);
 const portFlag = args.indexOf("--port");
@@ -303,7 +303,7 @@ async function serverStatus() {
     "-o", "BatchMode=yes",
     "-o", "ConnectTimeout=8",
     "mxj",
-    "cd /home/mxjserver/website && git log --oneline -1 && echo '---STATUS---' && git status --porcelain | head -20 && echo '---DOCKER---' && docker ps --filter name=mxjweb --format '{{.Names}}|{{.Status}}|{{.Ports}}'",
+    "cd /home/mxjserver/website && git log --oneline -1 && echo '---STATUS---' && git status --porcelain | head -20 && echo '---DOCKER---' && docker ps --filter name=mxj --format '{{.Names}}|{{.Status}}|{{.Ports}}'",
   ], 25_000);
 
   const repoPart = result.out.split("---STATUS---")[0]?.trim() || "";

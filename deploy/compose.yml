@@ -15,6 +15,7 @@ services:
     volumes:
       - ../config:/app/config
       - ../public/images/backgrounds:/app/public/images/backgrounds
+      - monitor-data:/app/.runtime:ro
     environment:
       NODE_ENV: production
       PORT: "3000"
@@ -26,3 +27,35 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  mxjmonitor:
+    image: mxjweb:latest
+    container_name: mxjmonitor
+    restart: unless-stopped
+    user: "0:0"
+    network_mode: none
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    command: ["node", "scripts/monitor-agent.mjs"]
+    environment:
+      TZ: Asia/Shanghai
+      MONITOR_INTERVAL_MS: "3000"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - monitor-data:/app/.runtime
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  monitor-data:
